@@ -1,4 +1,4 @@
-# output "url" {
-#   description = "Website URL"
-#   value       = google_compute_url_map.website.self_link
-# }
+output "url" {
+  description = "Public URL of the website"
+  value       = "http://${data.google_dns_managed_zone.gcp_wwwmartincoteca_zone.dns_name}"
+}

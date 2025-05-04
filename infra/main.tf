@@ -73,6 +73,11 @@ resource "google_compute_url_map" "martincoteca_urlmap_website" {
   path_matcher {
     name            = "allpaths"
     default_service = google_compute_backend_bucket.martincoteca_website_backend.self_link
+
+    path_rule {
+      paths   = ["/"]
+      service = google_compute_backend_bucket.martincoteca_website_backend.self_link
+    }
   }
 }
 
