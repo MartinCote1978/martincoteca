@@ -3,6 +3,8 @@
 **/.terraform/*
 *.lock.hcl
 
+**/.DS_Store
+
 # .tfstate files
 *.tfstate
 *.tfstate.*

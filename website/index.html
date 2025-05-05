@@ -21,6 +21,11 @@
             font-size: 2em;
         }
 
+        .social-link {
+            margin: 0 20px;
+            /* This adds 20px spacing on both left and right */
+        }
+
         .container {
             display: flex;
             flex-direction: column;
@@ -38,15 +43,19 @@
             <h1 id="demo" class="mb-5"></h1>
         </div>
         <div class="d-flex justify-content-center">
-            <a href="https://github.com/MartinCote1978" class="mx-2" target="_blank"><i
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank"><i
                     class="fab fa-github social-icon"></i></a>
-            <a href="https://www.linkedin.com/in/martincote" class="mx-2" target="_blank"><i
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank"><i
                     class="fab fa-linkedin-in social-icon"></i></a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank"><i
+                    class="fab fa-mastodon social-icon"></i></a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank"><i
+                    class="fab fa-gitlab social-icon"></i></a>
         </div>
     </div>
     <script>
         var i = 0;
-        var txt = 'Martin Cote'; /* The text */
+        var txt = 'Martin Côté'; /* The text */
         var speed = 100; /* The speed/duration of the effect in milliseconds */
 
         function typeWriter() {
