@@ -5,19 +5,19 @@ resource "google_storage_bucket" "martincoteca_website" {
   location = "US"
 }
 
-# Make new objects public
-resource "google_storage_object_access_control" "public_rule" {
-  object = google_storage_bucket_object.static_site_src.output_name
+# Make all objects public by default
+resource "google_storage_bucket_iam_member" "public_read" {
   bucket = google_storage_bucket.martincoteca_website.name
-  role   = "READER"
-  entity = "allUsers"
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
 }
 
-# Upload the html file to the bucket
-resource "google_storage_bucket_object" "static_site_src" {
-  name   = "index.html"
-  source = "../website/index.html"
-  bucket = google_storage_bucket.martincoteca_website.name
+# Upload all website files to the bucket
+resource "null_resource" "upload_website_files" {
+  provisioner "local-exec" {
+    command = "gsutil -m cp -r ../website/* gs://${google_storage_bucket.martincoteca_website.name}/"
+  }
+  depends_on = [google_storage_bucket.martincoteca_website]
 }
 
 # Reserve an external IP
@@ -65,6 +65,7 @@ resource "google_compute_url_map" "martincoteca_urlmap_website" {
   provider        = google
   name            = "martincoteca-website-url-map"
   default_service = google_compute_backend_bucket.martincoteca_website_backend.self_link
+
   host_rule {
     hosts        = ["*"]
     path_matcher = "allpaths"
@@ -75,7 +76,7 @@ resource "google_compute_url_map" "martincoteca_urlmap_website" {
     default_service = google_compute_backend_bucket.martincoteca_website_backend.self_link
 
     path_rule {
-      paths   = ["/"]
+      paths   = ["/*"]
       service = google_compute_backend_bucket.martincoteca_website_backend.self_link
     }
   }
