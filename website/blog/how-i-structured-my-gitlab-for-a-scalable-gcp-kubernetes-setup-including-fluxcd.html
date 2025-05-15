@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Groups & Projects Setup in GitLab</title>
+    <title>How I Structured my GitLab for a Scalable GCP + Kubernetes Setup including FluxCD</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
@@ -13,13 +13,14 @@
 <body>
     <div class="container">
         <div class="back-to-blogs">
-            <a href="blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
         </div>
 
         <article>
             <header class="blog-header">
                 <div class="blog-date">May 15, 2025</div>
-                <h1 class="blog-title">Groups & Projects Setup in GitLab</h1>
+                <h1 class="blog-title">How I Structured my GitLab for a Scalable GCP + Kubernetes Setup including FluxCD
+                </h1>
                 <div class="tags">
                     <span class="tag">Kubernetes</span>
                     <span class="tag">GCP</span>
@@ -32,36 +33,39 @@
             </header>
 
             <div class="blog-content">
+                <h2>Problem Statement</h2>
                 <p>Although selected because the company where I work was using it, GitLab has now been my preferred
-                    tool for my personal software project to manage my code, build the various artefacts my projects are
-                    producing constantly and deliver then continuously to my Kubernetes clusters. One of the main
-                    question I had originally was the groups (or "folders" in GitLab from my own perspective) and
-                    projects (or again, "git repo" in GitLab) structure to follow so the rest of the setup is easy,
-                    simple to maintain yet following most of, if not all, the best practices so it can easily integrate
-                    with technologies I would adopt along the way.</p>
+                    tool for my personal software project to manage my code, continuously build the various artefacts my
+                    projects are producing and deliver them continuously to my Kubernetes clusters. One of the main
+                    question I had originally was the structure of GitLab groups (which I view as folders) and projects
+                    (essentially Git repositories) so the rest of the setup is easy, simple to maintain yet following
+                    most of, if not all, the best practices so it can easily integrate with technologies I would adopt
+                    along the way.</p>
 
-                <h2>Original Requirements</h2>
+                <h2>Requirements</h2>
                 <p>I had few but important requirements when I set out to build my personal project on GitLab.</p>
 
                 <h3>Differentiation between Infrastructure and Application</h3>
-                <p>When starting originally, I mainly had one specific need; since I was interested and learning mostly
-                    the infrastructure aspects of a platofrm engineering such Kubernetes, Istio, Keycloak and
-                    OAuth2-proxy, I wanted to differentiate between the git repo containing the configuration for each
-                    component and the examples for each application I was building to test out my platform. Along the
-                    way, I realized and learned that it had the added benefits to provide an easy setup for various
-                    aspects of the entire codebase. RBAC could be done to set up access with limited realm if needed
-                    (more on that below in RBAC). Since GitLab provides the ability to create a default pipeline via the
-                    gitlab-ci.yml file, I was able to provide a different execution script for each (more on in Various
-                    Technologies). And finally, since I was learning pretty much evertying and starting from scratch, I
-                    could reuse templates and examples provided within each of my project with minimal changes or
-                    complicated mix up within a single project.
+                <p>My initial focus was on learning infrastructure platform engineering—technologies such as Kubernetes,
+                    Istio, Keycloak and OAuth2-proxy, I wanted to differentiate between the git repo containing the
+                    configuration for each component and the examples for each application I was building to test out my
+                    platform. Along the way, I realized and learned that it had the added benefits to provide an easy
+                    setup for various aspects of the entire codebase. RBAC could be done to set up access with limited
+                    realm if needed (more on that below in RBAC). Since GitLab provides the ability to create a default
+                    pipeline via the gitlab-ci.yml file, I was able to provide a different execution script for each
+                    (more on in Various Technologies). And finally, since I was learning pretty much everything and
+                    starting from scratch, I could reuse templates and examples provided within each of my project with
+                    minimal changes or complicated mix up within a single project.
                 </p>
 
                 <h3>GCP and Kubernetes</h3>
                 <p>My company has used AWS and Azure extensively and is doing quite well using both. Personally however,
-                    I've always found AWS very convulated to use and Azure still seem to have this Microsoft-based
-                    technologies first. I then decided to use the Google Cloud Platform for my personal projet and
-                    needed a setup that would support it easily.</p>
+                    I've always found AWS very convoluted to use and Azure still seem to have this Microsoft-based
+                    technologies first view, easily integrating Microsoft technologies but problematic on cheaper, open
+                    source solution the other cloud providers include (although that has started to change lately). I
+                    then decided to use the Google Cloud Platform for my personal projet and needed a setup that would
+                    support it easily. Over the months, I have found it very simple to use (i.e. a much better UI
+                    experience than AWS) and very stable (a few incidents but rarely on product I use!).</p>
 
                 <h3>RBAC</h3>
                 <p>I have obviously very limited need in that area for my personal project with a team of one: me!
@@ -73,7 +77,9 @@
                 <h3>Flux CD</h3>
                 <p>Since I was using GitLab and GCP, I always knew I would eventually get to a proper GitOps setup on my
                     system. Although I didn't know at the time FluxCD would end up to be my choice, I wanted to ensure I
-                    could integrate easily.</p>
+                    could integrate easily. GitLab uses and recommends FluxCD as the default GitOps choice tool. And
+                    since FluxCD uses standard command line functions similar to "kubectl" or "istioctl", it was my
+                    preferred choice.</p>
 
                 <h3>Various Technologies</h3>
                 <p>One aspect I didn't realize originally but in all honesty got lucky with my setup was the fact that
@@ -87,7 +93,7 @@
                     my components and ensure I can expand it along the way with new technologies or system added over
                     time.</p>
 
-                <h3>Structure</h3>
+                <h3>Setup Explanation: Structure</h3>
                 <pre>
                     <code>
                     Bouc.io
@@ -166,9 +172,10 @@
                 </ul>
 
                 <h2>Conclusion</h2>
-                <p>Although imperfect and still evolving, this specific setup has made my personal project fairly easy
-                    to maintain with upgrades, evolve through the additions of new technologies, or even adjust when
-                    required.</p>
+                <p>This GitLab structure, though imperfect and still evolving, has allowed me to maintain a modular,
+                    secure, and scalable foundation for my personal GCP-hosted Kubernetes environment. Its separation of
+                    infrastructure and application concerns simplifies onboarding new tools and has been ensuring so far
+                    future extensibility while respecting each tool's best practices.</p>
 
                 <p>Share your experience if you are using it or a similar approach.</p>
             </div>
