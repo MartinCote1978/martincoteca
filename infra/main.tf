@@ -17,6 +17,9 @@ resource "null_resource" "upload_website_files" {
   provisioner "local-exec" {
     command = "gsutil -m cp -r ../website/* gs://${google_storage_bucket.martincoteca_website.name}/"
   }
+  triggers = {
+    content_hash = sha1(join("", [for f in fileset("../website", "**") : filesha1("../website/${f}")]))
+  }
   depends_on = [google_storage_bucket.martincoteca_website]
 }
 
