@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Getting Started with Kubernetes on GCP - Martin Cote</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">March 15, 2024</div>
+                <h1 class="blog-title">Blog Post Title</h1>
+                <div class="tags">
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">GCP</span>
+                    <span class="tag">Cloud Native</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+
+                <h1>Getting Started with Kubernetes on GCP</h1>
+
+                <p>Lessons Learned Deploying Kubernetes on GCP</p>
+
+
+
+                1. Introduction
+
+                Brief overview of the project goal: building a secure, multi-service SaaS architecture on GCP using
+                Kubernetes.
+                Why GCP and Kubernetes? (scalability, managed services, DevOps culture)
+                Mention the tech stack: GKE, FluxCD, Istio, Keycloak, OAuth2-proxy, Helm, Terraform, GitLab, etc.
+                2. Setting Up the Foundation: VPC, Bastion, and GKE
+
+                Designing the network layout: Shared VPC strategy with limited IP access for security.
+                Challenges in initial access:
+                SSH access via GCP and from local environments.
+                Debate on shared vs individual VM users for the bastion host and your rationale for shared user +
+                session recording.
+                Terraform modules for VPC, Bastion, and GKE:
+                How you structured reusable modules.
+                Output dependencies and variable management across stages in CI/CD.
+                3. Terraform: Automating Infrastructure
+
+                Why use Terraform for GCP and Kubernetes setup.
+                Dealing with GKE logging and monitoring settings via Terraform (e.g., disabling unwanted logging for
+                simplicity).
+                Avoiding drift: keeping state clean across VPC, GKE, and Bastion modules.
+                GitLab pipeline integration: how infra was deployed as a pipeline with Terraform stages.
+                4. GitOps with FluxCD
+
+                FluxCD installation without agentk on GitLab.
+                Your method of handling Helm charts when GitLab has no built-in Helm registry:
+                FluxCD watches chart changes and image updates through GitLab pipelines.
+                Using image automation and HelmRelease triggers to drive deployments.
+
+
+
+                5. Securing the Cluster
+                6. Observability and Monitoring
+                7. Managing Multi-Service SaaS Architecture
+                8. Real-World Lessons & Gotchas
+                9. Future Work & Improvements
+
+                10. Conclusion
+                Summary of your architecture and journey.
+                What you'd do differently if starting from scratch.
+                Encouragement for others embarking on a similar path.
+
+
+
+                <p>This is the introduction paragraph of your blog post. It should provide a brief overview of what the
+                    reader can expect to learn from this article.</p>
+
+                <h2>First Section</h2>
+                <p>Your content goes here. This is where you'll write the main body of your blog post. You can include
+                    multiple paragraphs, code examples, and other content.</p>
+
+                <h3>Subsection</h3>
+                <p>You can organize your content with subsections as needed. This helps readers navigate through longer
+                    articles.</p>
+
+                <pre><code>// Example code block
+const example = "This is how you can include code snippets";
+console.log(example);</code></pre>
+
+                <h2>Conclusion</h2>
+                <p>Wrap up your blog post with a conclusion that summarizes the key points and provides any final
+                    thoughts or next steps for the reader.</p>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+</body>
+
+</html>

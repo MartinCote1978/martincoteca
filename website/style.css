@@ -1,0 +1,138 @@
+body {
+    background-color: #212529;
+    color: #ffffff;
+}
+
+a {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #adb5bd;
+}
+
+.social-icon {
+    font-size: 2em;
+}
+
+.social-link {
+    margin: 0 20px;
+    /* This adds 20px spacing on both left and right */
+}
+
+.vertical-spacing {
+    margin-top: 25px;
+    /* This adds 50px spacing from the top */
+}
+
+
+.project-logo {
+    width: 75px;
+    height: auto;
+    transition: transform 0.3s ease;
+    border-radius: 15px;
+    /* This adds rounded corners */
+}
+
+
+.project-logo:hover {
+    transform: scale(1.1);
+}
+
+.container {
+    padding: 2rem;
+    max-width: 800px;
+}
+
+.front-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.blog-header {
+    margin-bottom: 2rem;
+}
+
+.blog-date {
+    color: #adb5bd;
+    font-size: 0.9rem;
+}
+
+.blog-title {
+    font-size: 2.5rem;
+    margin: 1rem 0;
+}
+
+.blog-content {
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+.blog-content p {
+    margin-bottom: 1.5rem;
+}
+
+.blog-content h2 {
+    margin: 2rem 0 1rem;
+    font-size: 1.8rem;
+}
+
+.blog-content h3 {
+    margin: 1.5rem 0 1rem;
+    font-size: 1.5rem;
+}
+
+.blog-content code {
+    background-color: #2c3034;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 2rem;
+}
+
+.blog-content pre {
+    background-color: #2c3034;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.back-to-blogs,
+.back-home {
+    margin-bottom: 2rem;
+}
+
+.tags {
+    margin: 2rem 0;
+}
+
+.tag {
+    display: inline-block;
+    background-color: #2c3034;
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.blog-list {
+    margin-top: 2rem;
+}
+
+.blog-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #495057;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.blog-item:hover {
+    transform: translateX(10px);
+    background-color: #2c3034;
+}
