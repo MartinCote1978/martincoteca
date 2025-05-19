@@ -2,7 +2,9 @@
 resource "google_storage_bucket" "martincoteca_website" {
   provider = google
   name     = "martincoteca-website"
-  location = "US"
+  location = "northamerica-northeast1"
+  #location = "US"
+  force_destroy = true
 }
 
 # Make all objects public by default
