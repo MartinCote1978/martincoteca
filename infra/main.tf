@@ -53,7 +53,7 @@ resource "google_compute_backend_bucket" "martincoteca_website_backend" {
   name        = "martincoteca-website-backend"
   description = "Contains files needed by the website"
   bucket_name = google_storage_bucket.martincoteca_website.name
-  enable_cdn  = true
+  enable_cdn  = false
 }
 
 # Create HTTPS certificate
@@ -96,9 +96,11 @@ resource "google_compute_target_http_proxy" "martincoteca_http_proxy" {
 }
 
 # GCP forwarding rule
-resource "google_compute_global_forwarding_rule" "default" {
+#resource "google_compute_global_forwarding_rule" "default" {
+resource "google_compute_forwarding_rule" "default" {
   provider              = google
   name                  = "martincoteca-website-forwarding-rule"
+  region                = "northamerica-northeast1"
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.martincoteca_website_ip.address
   ip_protocol           = "TCP"
