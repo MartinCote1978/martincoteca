@@ -2,7 +2,7 @@
 resource "google_storage_bucket" "martincoteca_website" {
   provider = google
   name     = "martincoteca-website"
-  location = "northamerica-northeast1"
+  location = var.region
   #location = "US"
   force_destroy = true
 }
@@ -27,8 +27,10 @@ resource "null_resource" "upload_website_files" {
 
 # Reserve an external IP
 resource "google_compute_global_address" "martincoteca_website_ip" {
+  #resource "google_compute_address" "martincoteca_website_ip" {
   provider = google
   name     = "martincoteca-website-lb-ip"
+  #region   = var.region
 }
 
 # Get the managed DNS zone
@@ -45,6 +47,7 @@ resource "google_dns_record_set" "martincoteca-website" {
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.gcp_wwwmartincoteca_zone.name
   rrdatas      = [google_compute_global_address.martincoteca_website_ip.address]
+  #rrdatas = [google_compute_address.martincoteca_website_ip.address]
 }
 
 # Add the bucket as a CDN backend
@@ -53,7 +56,13 @@ resource "google_compute_backend_bucket" "martincoteca_website_backend" {
   name        = "martincoteca-website-backend"
   description = "Contains files needed by the website"
   bucket_name = google_storage_bucket.martincoteca_website.name
-  enable_cdn  = false
+  enable_cdn  = true
+  # cdn_policy {
+  #   cache_mode = "CACHE_ALL_STATIC"
+  #   client_ttl = 3600  # 1 hour
+  #   default_ttl = 3600
+  #   max_ttl = 86400    # 24 hours
+  # }
 }
 
 # Create HTTPS certificate
@@ -67,8 +76,10 @@ resource "google_compute_backend_bucket" "martincoteca_website_backend" {
 
 # GCP URL MAP
 resource "google_compute_url_map" "martincoteca_urlmap_website" {
-  provider        = google
-  name            = "martincoteca-website-url-map"
+  #resource "google_compute_region_url_map" "martincoteca_urlmap_website" {
+  provider = google
+  name     = "martincoteca-website-url-map"
+  #region          = var.region
   default_service = google_compute_backend_bucket.martincoteca_website_backend.self_link
 
   host_rule {
@@ -89,23 +100,29 @@ resource "google_compute_url_map" "martincoteca_urlmap_website" {
 
 # GCP target proxy
 resource "google_compute_target_http_proxy" "martincoteca_http_proxy" {
+  #resource "google_compute_region_target_http_proxy" "martincoteca_http_proxy" {
+
   provider = google
   name     = "martincoteca-website-target-proxy"
   url_map  = google_compute_url_map.martincoteca_urlmap_website.self_link
+  #url_map = google_compute_region_url_map.martincoteca_urlmap_website.self_link
   #ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
+  #region = var.region
 }
 
 # GCP forwarding rule
-#resource "google_compute_global_forwarding_rule" "default" {
-resource "google_compute_forwarding_rule" "default" {
-  provider              = google
-  name                  = "martincoteca-website-forwarding-rule"
-  region                = "northamerica-northeast1"
+resource "google_compute_global_forwarding_rule" "default" {
+  #resource "google_compute_forwarding_rule" "default" {
+  provider = google
+  name     = "martincoteca-website-forwarding-rule"
+  #region                = var.region
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.martincoteca_website_ip.address
-  ip_protocol           = "TCP"
+  #ip_address  = google_compute_address.martincoteca_website_ip.address
+  ip_protocol = "TCP"
   #port_range            = "443"
   port_range = "80"
   #target                = google_compute_target_https_proxy.website.self_link
   target = google_compute_target_http_proxy.martincoteca_http_proxy.self_link
+  #target = google_compute_region_target_http_proxy.martincoteca_http_proxy.self_link
 }
