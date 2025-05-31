@@ -56,7 +56,8 @@ resource "google_compute_backend_bucket" "martincoteca_website_backend" {
   name        = "martincoteca-website-backend"
   description = "Contains files needed by the website"
   bucket_name = google_storage_bucket.martincoteca_website.name
-  enable_cdn  = true
+  #enable_cdn  = true
+  enable_cdn = false
   # cdn_policy {
   #   cache_mode = "CACHE_ALL_STATIC"
   #   client_ttl = 3600  # 1 hour
