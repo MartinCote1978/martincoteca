@@ -27,10 +27,8 @@ resource "null_resource" "upload_website_files" {
 
 # Reserve an external IP
 resource "google_compute_global_address" "martincoteca_website_ip" {
-  #resource "google_compute_address" "martincoteca_website_ip" {
   provider = google
   name     = "martincoteca-website-lb-ip"
-  #region   = var.region
 }
 
 # Get the managed DNS zone
@@ -47,7 +45,6 @@ resource "google_dns_record_set" "martincoteca-website" {
   ttl          = 300
   managed_zone = data.google_dns_managed_zone.gcp_wwwmartincoteca_zone.name
   rrdatas      = [google_compute_global_address.martincoteca_website_ip.address]
-  #rrdatas = [google_compute_address.martincoteca_website_ip.address]
 }
 
 # Add the bucket as a CDN backend
@@ -77,10 +74,8 @@ resource "google_compute_backend_bucket" "martincoteca_website_backend" {
 
 # GCP URL MAP
 resource "google_compute_url_map" "martincoteca_urlmap_website" {
-  #resource "google_compute_region_url_map" "martincoteca_urlmap_website" {
-  provider = google
-  name     = "martincoteca-website-url-map"
-  #region          = var.region
+  provider        = google
+  name            = "martincoteca-website-url-map"
   default_service = google_compute_backend_bucket.martincoteca_website_backend.self_link
 
   host_rule {
@@ -101,29 +96,22 @@ resource "google_compute_url_map" "martincoteca_urlmap_website" {
 
 # GCP target proxy
 resource "google_compute_target_http_proxy" "martincoteca_http_proxy" {
-  #resource "google_compute_region_target_http_proxy" "martincoteca_http_proxy" {
 
   provider = google
   name     = "martincoteca-website-target-proxy"
   url_map  = google_compute_url_map.martincoteca_urlmap_website.self_link
-  #url_map = google_compute_region_url_map.martincoteca_urlmap_website.self_link
   #ssl_certificates = [google_compute_managed_ssl_certificate.website.self_link]
-  #region = var.region
 }
 
 # GCP forwarding rule
 resource "google_compute_global_forwarding_rule" "default" {
-  #resource "google_compute_forwarding_rule" "default" {
-  provider = google
-  name     = "martincoteca-website-forwarding-rule"
-  #region                = var.region
+  provider              = google
+  name                  = "martincoteca-website-forwarding-rule"
   load_balancing_scheme = "EXTERNAL"
   ip_address            = google_compute_global_address.martincoteca_website_ip.address
-  #ip_address  = google_compute_address.martincoteca_website_ip.address
-  ip_protocol = "TCP"
+  ip_protocol           = "TCP"
   #port_range            = "443"
   port_range = "80"
   #target                = google_compute_target_https_proxy.website.self_link
   target = google_compute_target_http_proxy.martincoteca_http_proxy.self_link
-  #target = google_compute_region_target_http_proxy.martincoteca_http_proxy.self_link
 }
