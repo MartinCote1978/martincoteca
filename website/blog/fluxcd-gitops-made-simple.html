@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Blog Post Title - Martin Cote</title>
+    <title>FluxCD GitOps Made Simple</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
@@ -15,39 +15,221 @@
 <body>
     <div class="container">
         <div class="back-to-blogs">
-            <a href="blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
         </div>
 
         <article>
             <header class="blog-header">
-                <div class="blog-date">March 15, 2024</div>
-                <h1 class="blog-title">Blog Post Title</h1>
+                <div class="blog-date">July 1, 2025</div>
+                <h1 class="blog-title">FluxCD GitOps Made Simple: My Journey to Automated Kubernetes Deployments</h1>
                 <div class="tags">
                     <span class="tag">Kubernetes</span>
                     <span class="tag">GCP</span>
-                    <span class="tag">Cloud Native</span>
+                    <span class="tag">FluxCD</span>
+                    <span class="tag">GitOps</span>
                 </div>
             </header>
 
             <div class="blog-content">
-                <p>This is the introduction paragraph of your blog post. It should provide a brief overview of what the
-                    reader can expect to learn from this article.</p>
+                <p>When I first started exploring GitOps and Kubernetes, the landscape felt a bit overwhelming. I had
+                    obviously experienced various automation techniques throughout my years but on Kubernetes, I had
+                    heard
+                    about automation on Kubernetes and declarative infrastructure, but the practical steps to get there
+                    were unclear. This blog post shares my journey implementing <strong>FluxCD</strong> for
+                    GitOps-driven Kubernetes deployments, both locally and in a sandbox environment, and how I
+                    structured my repository for clarity and scalability.</p>
 
-                <h2>First Section</h2>
-                <p>Your content goes here. This is where you'll write the main body of your blog post. You can include
-                    multiple paragraphs, code examples, and other content.</p>
+                <h2>Pre-requisites</h2>
+                <p>My technology stack for my personal project consists of:
+                <ul>
+                    <li>Kubernetes, via Docker Desktop for local development, and via GKE on Google Cloud Platform for
+                        my cloud sandbox instances.</li>
+                    <li>Terraform for the Infrastructure as Code for the sandbox setup</li>
+                    <li>Helm as the deployment manager</li>
+                    <li>Cert-Manager for the cluster issuer and certificates, for both local with self-signed
+                        certificates and Let's Encrypt certificates for my sandbox</li>
+                    <li>Istio as my service mesh</li>
+                    <li>Keycloak as my Identity Provider</li>
+                    <li>OAuth2-proxy as my external authorization, connected from Istio for session management</li>
+                    <li>Node.js for the API code, as an example</li>
+                    <li>REACT VITE app for the applications I built as examples to connect to the API</li>
+                    <li>GitLab as the CI/CD and Git repositories</li>
+                </ul>
+                </p>
 
-                <h3>Subsection</h3>
-                <p>You can organize your content with subsections as needed. This helps readers navigate through longer
-                    articles.</p>
+                <h2>Getting Started: From Zero to GitOps</h2>
+                <p>Like many, I began with limited knowledge of GitOps or FluxCD. My initial goal was simple: automate
+                    my Kubernetes deployments and manage everything through version control. I wanted to learn about the
+                    technique as well as the best practices
+                    to ensure a proper use within my work context. After some research, I ended up struggling choosing
+                    between FluxCD and ArgoCD. I
+                    chose FluxCD for its strong community, integration with GitLab, and support for advanced features
+                    like image update automation and Helm chart management. I also selected it for the supposedly
+                    simplicity to learn, although it is simpler, I wouldn't
+                    say it is "simple".</p>
 
-                <pre><code>// Example code block
-const example = "This is how you can include code snippets";
-console.log(example);</code></pre>
 
-                <h2>Conclusion</h2>
-                <p>Wrap up your blog post with a conclusion that summarizes the key points and provides any final
-                    thoughts or next steps for the reader.</p>
+                <h2>Key Concepts</h2>
+                <h3>GitOps principles</h3>
+                <b>1. Declarative</b>
+                <p>A system managed by GitOps must have its desired state expressed declaratively.</p>
+                <p><i>Meaning...</i> The state of the infrastructure and application setup must be contained within one
+                    or many
+                    Git repos!</p>
+
+                <b>2. Versioned and Immutable</b>
+                <p>Desired state is stored in a way that enforces immutability, versioning and retains a complete
+                    version history.</p>
+                <p><i>Meaning...</i> You have to be able to refer to a version and recreate the exact same
+                    infrastructure and
+                    application configuration, which mostly mean in my world adding a versioned tag in your Git repo.
+                </p>
+
+                <b>3. Pulled Automatically</b>
+                <p>Software agents automatically pull the desired state declarations from the source.</p>
+                <p><i>Meaning...</i> Changes submitted from the previous two principles are automatically pulled or
+                    pushed (I
+                    know, there are debates if "push" can be considered as "GitOps" but for my own sanity - and I
+                    suspect for a lot of others - I do consider a "push" system valid).</p>
+
+                <b>4. Continuously Reconciled</b>
+                <p>Software agents continuously observe actual system state and attempt to apply the desired state.</p>
+                <p><i>Meaning...</i> The "pulling" (or "pushing") must be done constantly for validation and adjusted if
+                    any
+                    discrepancies are found.</p>
+
+                <h3>FluxCD</h3>
+                <p>If you are not familiar with FluxCD, I highly recommend to read the documentation at <a
+                        href="https://fluxcd.io/flux/">https://fluxcd.io/flux/</a>. It is extremely well written for
+                    newbies like me and allowed me to start fairly quickly and build on top of it as I was adding
+                    requirements and needs.</p>
+
+                <p>The important thing to remember, FluxCD will be critical to complete the principle #3 and #4 from the
+                    above list.</p>
+
+
+                <h2>Repository Structure: Organizing for Success</h2>
+                <p>One of the first challenges was designing a repository structure that could support multiple
+                    environments and scale as my needs grew. At first, everything was built out of the "base" folders
+                    but eventually, I learned about Kustomize, mixed with FluxCD,
+                    and setup the structure properly to manage both my local and sandbox clusters. Here's how I
+                    organized my FluxCD repository:</p>
+                <pre><code>fluxcdboucio/
+├── clusters/           # Environment-specific configs
+│   ├── local/          # Local development
+│   └── sandbox/        # Sandbox (cloud) environment
+├── infrastructure/     # Infrastructure components
+│   ├── base/           # Common base configs
+│   └── overlays/       # Environment-specific overlays
+├── apps/               # Application deployments
+│   └── examples/       # Example apps and overlays
+└── README.md
+</code></pre>
+                <p>This structure keeps environment-specific settings isolated, while sharing common infrastructure and
+                    application definitions.</p>
+
+                <p>Note, my needs are very limited and do not require various access scheme, segregation of duty, etc.
+                    So in my case, I set it up with only one Git repo for FluxCD. If you need more granularity and
+                    control over access for developers versus maintainers, I would suggest to investigate
+                    many Git repos for FluxCD (i.e. one repo for "infrastructure", another for the "application", etc.).
+                </p>
+
+                <h2>Bootstrapping FluxCD: Local and Sandbox Environments</h2>
+                <p>With the structure in place, I set out to bootstrap FluxCD for both my local (Docker Desktop) and
+                    sandbox (GCP) clusters. The process was straightforward thanks to FluxCD's <code>bootstrap</code>
+                    command and GitLab integration. Here's how I did it:</p>
+
+                <h3>1. Prepare GitLab Deploy Token</h3>
+                <ul>
+                    <li>Create a deploy token in GitLab with <code>read_repository</code>, <code>read_registry</code>,
+                        <code>write_registry</code>, and related permissions.
+                    </li>
+                    <li>Export the token as <code>GITLAB_TOKEN</code> in your shell.</li>
+                </ul>
+
+                <h3>2. Bootstrap FluxCD</h3>
+                <p>For the <strong>local cluster</strong>:</p>
+                <pre><code>flux bootstrap gitlab \
+  --token-auth=true \
+  --read-write-key=true \
+  --owner=bouc-io/fluxcd \
+  --repository=fluxcdboucio \
+  --branch=master \
+  --path=clusters/local \
+  --components=source-controller,kustomize-controller,helm-controller,image-reflector-controller,image-automation-controller \
+  --visibility=private --personal=false --author-name "<AUTHOR>" --author-email "<EMAIL>" --verbose \
+  --cluster docker-desktop
+</code></pre>
+                <p>For the <strong>sandbox (GCP) cluster</strong>:</p>
+                <pre><code>flux bootstrap gitlab \
+  --token-auth=true \
+  --read-write-key=true \
+  --owner=bouc-io/fluxcd \
+  --repository=fluxcdboucio \
+  --branch=master \
+  --path=clusters/sandbox \
+  --components=source-controller,kustomize-controller,helm-controller,image-reflector-controller,image-automation-controller \
+  --visibility=private --personal=false --author-name "<AUTHOR>" --author-email "<EMAIL>" --verbose \
+  --cluster <CLUSTERNAME>
+</code></pre>
+                <p>Make sure your <code>kubectl</code> context is set to the correct cluster before running these
+                    commands.</p>
+
+                <h2>Secrets and ConfigMaps: Managing Sensitive Data</h2>
+                <p>To enable secure deployments, I created Kubernetes secrets for Docker registry and GitLab access, as
+                    well as ConfigMaps for environment-specific values. For example:</p>
+                <pre><code>kubectl create secret docker-registry gitlab-fluxcd-imgrepo-access \
+  --namespace=flux-system \
+  --docker-server=registry.gitlab.com \
+  --docker-username=&lt;username bot&gt; \
+  --docker-password=&lt;token password&gt; \
+  --cluster <CLUSTERNAME>
+</code></pre>
+                <p>And for ConfigMaps:</p>
+                <pre><code>kubectl create configmap static-web-sandbox-values \
+  --from-file=sandbox.values.yaml \
+  --namespace=default \
+  --cluster <CLUSTERNAME>
+</code></pre>
+                <p>This approach keeps secrets out of version control and allows for flexible configuration per
+                    environment.</p>
+
+                <p>Another note here, since I was using this usual Helm technique with a local YAML file during the
+                    installation, I continue to do so
+                    with my FluxCD configuration. In other words, my HelmRelease object refer to values to be found
+                    within the namespace under a specific ConfigMap
+                    name. I am currently researching how to properly set up; see my next steps.
+                </p>
+
+                <h2>Working Locally: Fast Feedback and Customization</h2>
+                <p>For local development, I often needed to test changes quickly. By modifying the overlays in
+                    <code>apps/examples/overlays/local</code>, I could point deployments to locally built images and
+                    apply changes instantly:
+                </p>
+                <pre><code>image:
+  repository: api-example
+  imagePullPolicy: Never
+  tag: "0.3.42"
+</code></pre>
+                <p>Then apply the overlay:</p>
+                <pre><code>kubectl apply -f apps/examples/overlays/local/flux-api-chart.yaml
+</code></pre>
+                <p>This workflow enabled rapid iteration without pushing every change to the remote registry.</p>
+
+                <h2>Conclusion & Next Steps</h2>
+                <p>Implementing FluxCD has helped me how I manage Kubernetes deployments, bringing automation,
+                    repeatability, and peace of mind. My setup now supports both local and cloud environments, with a
+                    clear structure for infrastructure and applications. Next, I plan to:</p>
+                <ul>
+                    <li>Adopt OCI Helm repositories as they become available in GitLab (GitLab doesn't support OCI helm
+                        repositories yet)</li>
+                    <li>Automate more secrets management (e.g., using Sealed Secrets or external secret stores)</li>
+                    <li>Expand GitOps to my configurations values for each component (i.e. Istio, Cert-Manager,
+                        OAuth2-proxy, Keycloak)</li>
+                    <li>Integrate more advanced monitoring and progressive delivery (e.g. Istio)</li>
+                </ul>
+                <p>If you're starting your own GitOps journey, I hope this post helps you avoid some of my early
+                    confusion and inspires you to automate your Kubernetes workflows with FluxCD!</p>
             </div>
         </article>
 
