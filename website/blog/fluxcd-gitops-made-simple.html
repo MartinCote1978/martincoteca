@@ -40,6 +40,25 @@
                     structured my repository for clarity and scalability.</p>
 
                 <h2>Pre-requisites</h2>
+                <p>The following tools installed are required to follow this blog post (on macOS X):
+                <ul>
+                    <li>Docker Desktop, download at <a
+                            href="https://www.docker.com/products/docker-desktop/">https://www.docker.com/products/docker-desktop/</a>
+                    </li>
+                    <li>Google Cloud SDK, installed with: <code>brew install google-cloud-sdk</code></li>
+                    <li>Kubectl, installed with: <code>brew install kubectl</code></li>
+                    <li>Helm, installed with: <code>brew install helm</code></li>
+                    <li>FluxCD, installed with: <code>brew install fluxcd</code></li>
+                    <li>Istio, download at <a
+                            href="https://istio.io/latest/docs/setup/getting-started/">https://istio.io/latest/docs/setup/getting-started/</a>
+                    </li>
+                    <li>Terraform, installed with: <code>brew install terraform</code> or
+                        <code>brew install tfenv</code>
+                    </li>
+                </ul>
+                </p>
+
+                <h2>Technology Stack</h2>
                 <p>My technology stack for my personal project consists of:
                 <ul>
                     <li>Kubernetes, via Docker Desktop for local development, and via GKE on Google Cloud Platform for
@@ -59,44 +78,53 @@
 
                 <h2>Getting Started: From Zero to GitOps</h2>
                 <p>Like many, I began with limited knowledge of GitOps or FluxCD. My initial goal was simple: automate
-                    my Kubernetes deployments and manage everything through version control. I wanted to learn about the
+                    my Kubernetes deployments and manage everything through a solid version control system. At the same
+                    time, I wanted to learn about the
                     technique as well as the best practices
-                    to ensure a proper use within my work context. After some research, I ended up struggling choosing
-                    between FluxCD and ArgoCD. I
-                    chose FluxCD for its strong community, integration with GitLab, and support for advanced features
+                    to ensure a proper use within my work context. After some research, I was struggling to choose
+                    between FluxCD and ArgoCD. The community has been strong on both sides while the various articles
+                    comparing the two always come back with the same conclusion: both are solid GitOps and automation
+                    tool for Kubernetes and it amounts to personal preferences. I chose FluxCD for its strong community,
+                    integration with GitLab (as well as the recommended solution by GitLab themselves), and support for
+                    advanced features
                     like image update automation and Helm chart management. I also selected it for the supposedly
-                    simplicity to learn, although it is simpler, I wouldn't
+                    simplicity to learn, and although it is simpler, I wouldn't
                     say it is "simple".</p>
 
 
                 <h2>Key Concepts</h2>
+                <p>As a reminder, here are the key concepts of GitOps as well as FluxCD that I worked from, with a bit
+                    of my own interpretation around them and how I perceived their implementation within my context:</p>
+
                 <h3>GitOps principles</h3>
                 <b>1. Declarative</b>
                 <p>A system managed by GitOps must have its desired state expressed declaratively.</p>
                 <p><i>Meaning...</i> The state of the infrastructure and application setup must be contained within one
-                    or many
-                    Git repos!</p>
+                    or many Git repos!</p>
 
                 <b>2. Versioned and Immutable</b>
                 <p>Desired state is stored in a way that enforces immutability, versioning and retains a complete
                     version history.</p>
                 <p><i>Meaning...</i> You have to be able to refer to a version and recreate the exact same
-                    infrastructure and
-                    application configuration, which mostly mean in my world adding a versioned tag in your Git repo.
+                    infrastructure and application configuration, which mostly mean in my world adding a versioned tag
+                    in my Git repo so I can refer to it later.
                 </p>
 
                 <b>3. Pulled Automatically</b>
                 <p>Software agents automatically pull the desired state declarations from the source.</p>
                 <p><i>Meaning...</i> Changes submitted from the previous two principles are automatically pulled or
-                    pushed (I
-                    know, there are debates if "push" can be considered as "GitOps" but for my own sanity - and I
-                    suspect for a lot of others - I do consider a "push" system valid).</p>
+                    pushed (I know, there are debates if "push" can be considered as "GitOps" but for my own sanity -
+                    and I suspect for a lot of others - I do consider a "push" system valid). In my current setup, I use
+                    both "push" and "pull" to ensure the desired state is always in sync with the actual state. I use
+                    "pull" using the FluxCD automation and configuration while I mostly use the "push" for the CI
+                    portion of my entire project.</p>
 
                 <b>4. Continuously Reconciled</b>
                 <p>Software agents continuously observe actual system state and attempt to apply the desired state.</p>
                 <p><i>Meaning...</i> The "pulling" (or "pushing") must be done constantly for validation and adjusted if
-                    any
-                    discrepancies are found.</p>
+                    any discrepancies are found. In my current project, FluxCD is constantly pulling the desired state
+                    from the Git repo and pushing the actual state to the Kubernetes cluster. Then GitLab CI pipelines
+                    are constantly executing as soon as a change is detected in the Git repo.</p>
 
                 <h3>FluxCD</h3>
                 <p>If you are not familiar with FluxCD, I highly recommend to read the documentation at <a
@@ -105,7 +133,7 @@
                     requirements and needs.</p>
 
                 <p>The important thing to remember, FluxCD will be critical to complete the principle #3 and #4 from the
-                    above list.</p>
+                    above list for the management of the desired state of my Kubernetes cluster.</p>
 
 
                 <h2>Repository Structure: Organizing for Success</h2>
@@ -130,8 +158,10 @@
 
                 <p>Note, my needs are very limited and do not require various access scheme, segregation of duty, etc.
                     So in my case, I set it up with only one Git repo for FluxCD. If you need more granularity and
-                    control over access for developers versus maintainers, I would suggest to investigate
-                    many Git repos for FluxCD (i.e. one repo for "infrastructure", another for the "application", etc.).
+                    control over access for software engineers versus infrastructure engineers, I would suggest to
+                    investigate many Git repos for FluxCD (i.e. one repo for "infrastructure", another for the
+                    "application", etc.). In my case, I have a single repo for FluxCD and I have a single GitLab
+                    deploy token for the entire project.
                 </p>
 
                 <h2>Bootstrapping FluxCD: Local and Sandbox Environments</h2>
@@ -157,7 +187,7 @@
   --branch=master \
   --path=clusters/local \
   --components=source-controller,kustomize-controller,helm-controller,image-reflector-controller,image-automation-controller \
-  --visibility=private --personal=false --author-name "<AUTHOR>" --author-email "<EMAIL>" --verbose \
+  --visibility=private --personal=false --author-name "AUTHOR" --author-email "EMAIL" --verbose \
   --cluster docker-desktop
 </code></pre>
                 <p>For the <strong>sandbox (GCP) cluster</strong>:</p>
@@ -169,8 +199,8 @@
   --branch=master \
   --path=clusters/sandbox \
   --components=source-controller,kustomize-controller,helm-controller,image-reflector-controller,image-automation-controller \
-  --visibility=private --personal=false --author-name "<AUTHOR>" --author-email "<EMAIL>" --verbose \
-  --cluster <CLUSTERNAME>
+  --visibility=private --personal=false --author-name "AUTHOR" --author-email "EMAIL" --verbose \
+  --cluster CLUSTERNAME
 </code></pre>
                 <p>Make sure your <code>kubectl</code> context is set to the correct cluster before running these
                     commands.</p>
@@ -195,14 +225,14 @@
                     environment.</p>
 
                 <p>Another note here, since I was using this usual Helm technique with a local YAML file during the
-                    installation, I continue to do so
-                    with my FluxCD configuration. In other words, my HelmRelease object refer to values to be found
-                    within the namespace under a specific ConfigMap
-                    name. I am currently researching how to properly set up; see my next steps.
+                    installation, I continue to do so with my FluxCD configuration. In other words, my HelmRelease
+                    object refer to values to be found within the namespace under a specific ConfigMap name. I am
+                    currently researching how to properly set that up while respecting GitOps principles; see my next
+                    steps.
                 </p>
 
                 <h2>Working Locally: Fast Feedback and Customization</h2>
-                <p>For local development, I often needed to test changes quickly. By modifying the overlays in
+                <p>For local development, I often need to test changes quickly. By modifying the overlays in
                     <code>apps/examples/overlays/local</code>, I could point deployments to locally built images and
                     apply changes instantly:
                 </p>
@@ -214,7 +244,9 @@
                 <p>Then apply the overlay:</p>
                 <pre><code>kubectl apply -f apps/examples/overlays/local/flux-api-chart.yaml
 </code></pre>
-                <p>This workflow enabled rapid iteration without pushing every change to the remote registry.</p>
+                <p>This workflow enables rapid iteration without pushing every change to the remote registry. Once
+                    complete, I can simply reset my local Git repo back to the original state and move on to the next
+                    change.</p>
 
                 <h2>Conclusion & Next Steps</h2>
                 <p>Implementing FluxCD has helped me how I manage Kubernetes deployments, bringing automation,
@@ -230,6 +262,8 @@
                 </ul>
                 <p>If you're starting your own GitOps journey, I hope this post helps you avoid some of my early
                     confusion and inspires you to automate your Kubernetes workflows with FluxCD!</p>
+
+                <p><i>This blog post was revised on 2025-07-05 for improvements on readability and clarity.</i></p>
             </div>
         </article>
 

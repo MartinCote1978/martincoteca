@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blog Post Title - Martin Cote</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+    <script src="../analytics.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">March 15, 2024</div>
+                <h1 class="blog-title">How I Got My Chatbot Working on Kubernetes with Istio, Ollama, Node.js, and
+                    Secure Auth</h1>
+                <div class="tags">
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">GCP</span>
+                    <span class="tag">Cloud Native</span>
+                    <span class="tag">Ollama</span>
+                    <span class="tag">Node.js</span>
+                    <span class="tag">Helm</span>
+                    <span class="tag">Istio</span>
+                    <span class="tag">Keycloak</span>
+                    <span class="tag">OAuth2-proxy</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+                <p>In this post, I'll walk you through how I built and deployed a secure, "good-enough" chatbot on
+                    Kubernetes, leveraging modern cloud-native tools like <strong>Lovable.dev</strong> for the UI,
+                    <strong>Ollama</strong> for LLM inference, and a robust authentication stack with
+                    <strong>Istio</strong>, <strong>Keycloak</strong>, and <strong>OAuth2-proxy</strong>. This stack
+                    runs on <strong>GCP</strong> and is managed with <strong>Helm</strong> and GitOps best practices.
+                </p>
+
+                <h2>Starting with the Chatbot UI (Lovable.dev)</h2>
+                <p>I began by prototyping the chatbot's frontend using <strong>Lovable.dev</strong>, which allowed me to
+                    quickly scaffold a modern, React-based UI. The UI connects to the backend via REST APIs and is
+                    designed for easy integration with authentication providers and LLM APIs.</p>
+                <pre><code>// Example: React + Lovable.dev UI setup
+import React from 'react';
+import { Chatbot } from 'lovable-chatbot';
+
+function App() {
+  return <Chatbot apiUrl={process.env.REACT_APP_API_URL} />;
+}
+</code></pre>
+
+                <h2>Deploying Ollama with a Custom Helm Chart</h2>
+                <p>For the LLM backend, I chose <strong>Ollama</strong> for its flexibility and local model support. I
+                    created a custom <strong>Helm chart</strong> to deploy the Ollama container on Kubernetes, exposing
+                    its API as a service. This made it easy to update models and scale the backend as needed.</p>
+                <pre><code># Example: Helm values for Ollama
+ollama:
+  image: ollama/ollama:0.1.12
+  service:
+    type: ClusterIP
+    port: 11434
+</code></pre>
+                <p>The chatbot API and UI were also containerized and deployed via their own Helm charts, with
+                    environment variables pointing to the Ollama API endpoint.</p>
+
+                <h2>API Gateway, Security, and Auth with Istio, Keycloak, and OAuth2-proxy</h2>
+                <p>To secure the chatbot and its APIs, I set up <strong>Istio</strong> as a service mesh and ingress
+                    gateway. Istio routes traffic to the chatbot services and integrates with
+                    <strong>OAuth2-proxy</strong> for authentication. <strong>Keycloak</strong> acts as the identity
+                    provider, managing users, realms, and OAuth2 clients.
+                </p>
+                <ul>
+                    <li><strong>Istio</strong> handles ingress, mTLS, and traffic policies.</li>
+                    <li><strong>OAuth2-proxy</strong> sits in front of the APIs, validating sessions and tokens.</li>
+                    <li><strong>Keycloak</strong> issues and manages OAuth2 tokens for users and services.</li>
+                </ul>
+                <pre><code># Example: Istio + OAuth2-proxy integration (ConfigMap)
+extensionProviders:
+- name: "oauth2-proxy"
+  envoyExtAuthzHttp:
+    service: "oauth2-proxy-rel.oauth2-proxy.svc.cluster.local"
+    port: "80"
+    includeRequestHeadersInCheck: ["authorization", "cookie"]
+    headersToUpstreamOnAllow: ["authorization", "path", "cookie", "x-auth-request-user", "x-auth-request-email", "x-auth-request-access-token"]
+</code></pre>
+                <p>With this setup, only authenticated users can access the chatbot UI and API. Sessions are managed
+                    securely, and tokens are validated at the gateway before requests reach the backend.</p>
+
+                <h2>Conclusion</h2>
+                <p>By combining Lovable.dev, Ollama, Helm, Istio, Keycloak, and OAuth2-proxy, I was able to build a
+                    scalable, secure, and cloud-native chatbot platform. This approach ensures that both the user
+                    experience and security are first-class citizens, and the stack is ready for production workloads on
+                    GCP or any Kubernetes environment.</p>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script>
+        // Dynamically load the social links block
+        fetch('social-links.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('social-links').innerHTML = data;
+            });
+    </script>
+</body>
+
+</html>
