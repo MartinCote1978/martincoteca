@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Experience with Lovable.dev - From idea to production - Martin Cote</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+    <script src="../analytics.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">July 5, 2025</div>
+                <h1 class="blog-title">My Experience with Lovable.dev - From idea to production</h1>
+                <div class="tags">
+                    <span class="tag">Lovable.dev</span>
+                    <span class="tag">AI</span>
+                    <span class="tag">AI Agent</span>
+                    <span class="tag">Chatbot</span>
+                    <span class="tag">LLM</span>
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">GCP</span>
+                    <span class="tag">OAuth2-proxy</span>
+                    <span class="tag">Keycloak</span>
+                    <span class="tag">Istio</span>
+                    <span class="tag">Ollama</span>
+                    <span class="tag">React</span>
+                    <span class="tag">TypeScript</span>
+                    <span class="tag">Vite</span>
+                    <span class="tag">Helm</span>
+                    <span class="tag">Docker</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+                <p>In this post, I'll share my journey of building a modern, production-ready chatbot using
+                    <strong>Lovable.dev</strong> as the foundation. What started as a simple UI prototype evolved into a
+                    comprehensive system with authentication, LLM integration, and cloud-native deployment on Google
+                    Cloud Platform (GCP) with Kubernetes.
+                </p>
+
+                <h2>Starting with Lovable.dev</h2>
+                <p>I began my chatbot project by exploring <strong>Lovable.dev</strong>, an AI-powered development
+                    platform that promised to accelerate UI creation. The initial experience was impressive - I was able
+                    to describe my vision for a "monochrome chatbot UI" and Lovable.dev generated a complete React
+                    application with TypeScript, Vite, and shadcn-ui components.</p>
+
+                <p>The generated codebase included:</p>
+                <ul>
+                    <li>A clean, responsive chat interface with message bubbles</li>
+                    <li>Sidebar with chat history and model selection</li>
+                    <li>Settings overlay with theme switching (light/dark mode)</li>
+                    <li>File attachment capabilities and conversation actions</li>
+                    <li>Modern UI components using Radix UI primitives</li>
+                </ul>
+
+                <pre><code>// Example of the generated component structure
+src/
+├── components/
+│   ├── ChatSidebar.tsx      // Chat history and model selection
+│   ├── ChatHeader.tsx       // Header with user info
+│   ├── ChatInput.tsx        // Message input with attachments
+│   ├── ChatMessage.tsx      // Individual message bubbles
+│   └── SettingsOverlay.tsx  // User settings and preferences
+├── auth/
+│   ├── adapters/            // Identity provider adapters
+│   └── authcontext.tsx      // Authentication context
+└── lib/
+    ├── ollamaApi.ts         // LLM API integration
+    └── models.ts            // Model configuration</code></pre>
+
+                <h2>Connecting to Ollama API</h2>
+                <p>With the UI foundation in place, I needed to connect it to a Large Language Model (LLM). I chose
+                    <strong>Ollama</strong> for its flexibility and local model support. The integration involved
+                    creating API utilities to communicate with Ollama's REST API.
+                </p>
+
+                <p>Key features of the Ollama integration:</p>
+                <ul>
+                    <li>Dynamic model selection from environment variables</li>
+                    <li>Support for multiple LLM models (Llama 3.2, Gemma 3, etc.)</li>
+                    <li>Real-time streaming responses</li>
+                    <li>Error handling and retry logic</li>
+                </ul>
+
+                <pre><code>// Example: Ollama API integration
+export const sendMessage = async (message: string, model: string) => {
+  const response = await axiosInstance.post('/api/generate', {
+    model: model,
+    prompt: message,
+    stream: false
+  });
+  return response.data;
+};</code></pre>
+
+                <h2>Building the Infrastructure Stack</h2>
+                <p>The real challenge began when I decided to deploy this as a production system. I built a
+                    comprehensive infrastructure using modern cloud-native tools:</p>
+
+                <h3>Helm Charts for Deployment</h3>
+                <p>I created custom Helm charts for each component:</p>
+                <ul>
+                    <li><strong>chatbot-chart</strong>: Deploys the React UI with environment variable injection</li>
+                    <li><strong>chatbot-api-chart</strong>: Backend API service for chat management</li>
+                    <li><strong>ollama-chart</strong>: Ollama LLM service with model management</li>
+                </ul>
+
+                <p>The Dockerfile I created supports runtime environment injection, allowing the same container to work
+                    across different environments (local, staging, production).</p>
+
+                <h3>Authentication with Keycloak and OAuth2-proxy</h3>
+                <p>Security was a top priority. I implemented a robust authentication system:</p>
+                <ul>
+                    <li><strong>Keycloak</strong> as the identity provider with custom realm configuration</li>
+                    <li><strong>OAuth2-proxy</strong> for session management and token validation</li>
+                    <li>Multiple authentication adapters (Keycloak, Auth0, Okta, stub for development)</li>
+                    <li>JWT token handling with automatic refresh</li>
+                </ul>
+
+                <pre><code>// Example: Keycloak adapter configuration
+export class KeycloakAdapter implements IdentityProvider {
+  private keycloak: Keycloak.KeycloakInstance;
+  
+  async initialize(): Promise<void> {
+    this.keycloak = new Keycloak({
+      url: window.ENV.VITE_SSO_SERVER_URL,
+      realm: window.ENV.VITE_OAUTH_REALM,
+      clientId: window.ENV.VITE_OAUTH_CLIENT_ID
+    });
+  }
+}</code></pre>
+
+                <h3>Service Mesh with Istio</h3>
+                <p>I used <strong>Istio</strong> as the service mesh to handle:</p>
+                <ul>
+                    <li>Traffic routing and load balancing</li>
+                    <li>CORS policy management</li>
+                    <li>mTLS encryption between services</li>
+                    <li>Request/response transformation</li>
+                    <li>Integration with OAuth2-proxy for authentication</li>
+                </ul>
+
+                <p>The Istio VirtualService configuration routes traffic appropriately:</p>
+                <ul>
+                    <li><code>/ollama/*</code> → Ollama service</li>
+                    <li><code>/chats/*</code> → Chatbot API service</li>
+                    <li><code>/oauth2/*</code> → OAuth2-proxy</li>
+                    <li>Root traffic → Chatbot UI</li>
+                </ul>
+
+                <h2>Development Journey and Challenges</h2>
+                <p>Looking at my Git commit history, I can see the evolution of this project:</p>
+
+                <h3>Initial Setup (Commits 104-95)</h3>
+                <p>The project started with Lovable.dev generating the basic UI structure. Early commits show the
+                    foundation being laid with Vite, React, and shadcn-ui components.</p>
+
+                <h3>Authentication Integration (Commits 94-70)</h3>
+                <p>This phase involved significant work on Keycloak integration, including:</p>
+                <ul>
+                    <li>Fixing infinite redirect loops</li>
+                    <li>Implementing proper token handling</li>
+                    <li>Creating identity provider adapters</li>
+                    <li>Debugging authentication flows</li>
+                </ul>
+
+                <h3>API and Infrastructure (Commits 69-40)</h3>
+                <p>Focus shifted to backend integration and infrastructure:</p>
+                <ul>
+                    <li>Ollama API integration</li>
+                    <li>Docker containerization with environment injection</li>
+                    <li>Kubernetes deployment configurations</li>
+                    <li>CORS and proxy configuration</li>
+                </ul>
+
+                <h3>UI Enhancements (Commits 39-20)</h3>
+                <p>User experience improvements:</p>
+                <ul>
+                    <li>Dark/light theme implementation</li>
+                    <li>File attachment functionality</li>
+                    <li>Like/dislike buttons for responses</li>
+                    <li>Copy-paste functionality</li>
+                    <li>Settings overlay with language selection</li>
+                </ul>
+
+                <h3>Production Readiness (Commits 19-1)</h3>
+                <p>Final polish and production deployment:</p>
+                <ul>
+                    <li>Unit test framework setup with Vitest</li>
+                    <li>Layout and scrolling improvements</li>
+                    <li>Final authentication fixes</li>
+                    <li>Documentation completion</li>
+                </ul>
+
+                <h2>Key Learnings</h2>
+                <p>This project taught me several valuable lessons:</p>
+
+                <h3>Lovable.dev Strengths</h3>
+                <ul>
+                    <li><strong>Rapid Prototyping</strong>: Generated a complete, working UI in minutes</li>
+                    <li><strong>Modern Stack</strong>: Uses current best practices (React 18, TypeScript, Vite)</li>
+                    <li><strong>Component Quality</strong>: Generated components were well-structured and extensible
+                    </li>
+                    <li><strong>Customization</strong>: Easy to modify and extend the generated code</li>
+                </ul>
+
+                <h3>Integration Challenges</h3>
+                <ul>
+                    <li><strong>Authentication Complexity</strong>: Keycloak integration required significant debugging
+                    </li>
+                    <li><strong>Environment Management</strong>: Runtime environment injection was crucial for
+                        containerization</li>
+                    <li><strong>Service Mesh Configuration</strong>: Istio routing and CORS policies needed careful
+                        tuning</li>
+                    <li><strong>Token Management</strong>: Proper JWT handling across services required attention</li>
+                </ul>
+
+                <h2>Current State and Future Plans</h2>
+                <p>The chatbot is now running in production with:</p>
+                <ul>
+                    <li>✅ Modern React UI with TypeScript</li>
+                    <li>✅ Ollama LLM integration</li>
+                    <li>✅ Keycloak authentication</li>
+                    <li>✅ Istio service mesh</li>
+                    <li>✅ Kubernetes deployment</li>
+                    <li>✅ Docker containerization</li>
+                    <li>✅ Environment-based configuration</li>
+                </ul>
+
+                <p>Future enhancements planned:</p>
+                <ul>
+                    <li>Enhanced conversation management</li>
+                    <li>Model fine-tuning capabilities</li>
+                    <li>Advanced analytics and monitoring</li>
+                    <li>Multi-tenant support</li>
+                </ul>
+
+                <h2>Conclusion</h2>
+                <p>Lovable.dev proved to be an excellent starting point for rapid UI development. The generated code was
+                    production-ready and followed modern React patterns. However, the real value came from the
+                    comprehensive infrastructure I built around it - the authentication system, service mesh, and
+                    containerized deployment.</p>
+
+                <p>This project demonstrates how AI-powered development tools like Lovable.dev can accelerate the
+                    initial development phase, but they work best when integrated into a well-architected, cloud-native
+                    infrastructure. The combination of rapid prototyping with robust infrastructure creates a powerful
+                    development workflow.</p>
+
+                <p>The entire journey, from Lovable.dev prototype to production deployment, took approximately 3 months
+                    and resulted in a scalable, secure chatbot platform that can serve as a foundation for more complex
+                    AI applications.</p>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script>
+        // Dynamically load the social links block
+        fetch('social-links.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('social-links').innerHTML = data;
+            });
+    </script>
+</body>
+
+</html>

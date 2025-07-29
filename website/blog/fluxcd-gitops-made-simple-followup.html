@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FluxCD GitOps Made Simple: A Follow-up</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+    <script src="../analytics.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">March 15, 2024</div>
+                <h1 class="blog-title">FluxCD GitOps Made Simple: A Follow-up</h1>
+                <div class="tags">
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">GCP</span>
+                    <span class="tag">Cloud Native</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+                <p>In my previous post, <a href="fluxcd-gitops-made-simple.html">"FluxCD GitOps Made Simple: My Journey
+                        to Automated Kubernetes Deployments"</a>, I mentioned wanting to follow up on how to setup the
+                    ConfigMap automatically following GitOps principles. This post discusses the various next steps I
+                    took in order to achieve that.</p>
+
+                <h2>Some required techniques and technologies</h2>
+                <p>In Kustomization, there's a tool called "configMapGenerator".</p>
+                <p>In Git, there's a tool called "submodule" into which you can reference another Git repo, which was
+                    working well for me where I had put all of my previous values.yaml content.</p>
+                <p>I used a layered approach, where leveraging FluxCD HelmRelease "valuesFrom" tool, I was able to have
+                    a base configmap, a level configmap and then values directly into the helmrelease for items
+                    constantly changing.</p>
+
+                <h2>A few gotchas</h2>
+                <p>One thing to note, in FluxCD and using GitLab, you have to use a submodule using the HTTPS instead of
+                    the SSH due to the authentication mechanism of FluxCD</p>
+                <p>Kustomization is a pain! I had to change and re-change my FluxCD Git repo folder structure to ensure
+                    I was meeting all security requirements. And even then, I'm still failing on one validation which
+                    for now, doesn't seem to have an impact. More to investigate here!!</p>
+                <p>When the content of one of the base or level values file changed, it is a bit more cumbersome to
+                    bring it updated. You have to first update the component Git repo and commit the changes. then, in
+                    the submodule repo folder, which is under the main FluxCD git repo, do a git pull. Then commit those
+                    changes to the FluxCD git repo and reconcile everything, which means the git source as well as the
+                    helmrelease.</p>
+
+
+                <h2>A new folder structure</h2>
+                .
+                ├── application-gitops-workflow-by-gitlab.jpg
+                ├── cluster-and-platform-gitops-workflow-by-gitlab.jpg
+                ├── clusters
+                │ ├── base
+                │ │ ├── apps
+                │ │ └── infrastructure
+                │ ├── components
+                │ │ ├── api-java
+                │ │ ├── api-node
+                │ │ ├── chatbot-api
+                │ │ ├── chatbot-ui
+                │ │ ├── ollama
+                │ │ ├── static-website
+                │ │ └── txn-website
+                │ ├── local
+                │ │ ├── apps
+                │ │ ├── flux-system
+                │ │ ├── infrastructure
+                │ │ └── kustomization.yaml
+                │ └── sandbox
+                │ ├── apps
+                │ ├── flux-system
+                │ ├── infrastructure
+                │ └── kustomization.yaml
+                ├── gitops-toolkit.jpeg
+                ├── LICENSE
+                ├── push-rules-setup.jpg
+                └── README.md
+
+
+
+
+                <h2>Conclusion</h2>
+                <p>This is definitely starting to improve and following proper GitOps principles.</p>
+                <p>
+                    Next steps:
+                    - Still need to move cert-manager, keycloak, oauth2-proxy and Istio into a proper GitOps setup,
+                    especially how to manage their respective configuration.
+                    - Still need to investigate how to properly manage secrets!
+                </p>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script>
+        // Dynamically load the social links block
+        fetch('social-links.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('social-links').innerHTML = data;
+            });
+    </script>
+</body>
+
+</html>
