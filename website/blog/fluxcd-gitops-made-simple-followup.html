@@ -20,12 +20,14 @@
 
         <article>
             <header class="blog-header">
-                <div class="blog-date">March 15, 2024</div>
+                <div class="blog-date">July 30, 2025</div>
                 <h1 class="blog-title">FluxCD GitOps Made Simple: A Follow-up</h1>
                 <div class="tags">
                     <span class="tag">Kubernetes</span>
                     <span class="tag">GCP</span>
                     <span class="tag">Cloud Native</span>
+                    <span class="tag">GitOps</span>
+                    <span class="tag">FluxCD</span>
                 </div>
             </header>
 
@@ -36,16 +38,282 @@
                     took in order to achieve that.</p>
 
                 <h2>Some required techniques and technologies</h2>
-                <p>In Kustomization, there's a tool called "configMapGenerator".</p>
-                <p>In Git, there's a tool called "submodule" into which you can reference another Git repo, which was
-                    working well for me where I had put all of my previous values.yaml content.</p>
-                <p>I used a layered approach, where leveraging FluxCD HelmRelease "valuesFrom" tool, I was able to have
-                    a base configmap, a level configmap and then values directly into the helmrelease for items
-                    constantly changing.</p>
+                <p>To achieve a proper GitOps setup with automated ConfigMap management, I leveraged three key
+                    technologies that work together seamlessly:</p>
+
+                <h3>1. Kustomize configMapGenerator</h3>
+                <p>Kustomize's <code>configMapGenerator</code> is a powerful feature that automatically creates
+                    ConfigMaps from files, literals, or environment files. According to the <a
+                        href="https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/"
+                        target="_blank">official Kustomize
+                        documentation</a>, this generator creates ConfigMaps by reading files, environment files, or
+                    literal key-value pairs. The key advantage is that it automatically handles ConfigMap naming and
+                    updates when the source files change.</p>
+
+                <p>The <code>configMapGenerator</code> supports several sources:</p>
+                <ul>
+                    <li><strong>Files:</strong> Direct file references that get embedded as ConfigMap data</li>
+                    <li><strong>Environment files:</strong> Key-value pairs from .env files</li>
+                    <li><strong>Literals:</strong> Direct key-value pairs specified inline</li>
+                </ul>
+
+                <p>This approach eliminates the need to manually create and maintain ConfigMaps, ensuring they're always
+                    synchronized with your Git repository.</p>
+
+                <h3>2. Git Submodules for Component Management</h3>
+                <p>Git submodules allow you to include other Git repositories as subdirectories within your main
+                    repository. As documented in the <a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules"
+                        target="_blank">Git Submodules guide</a>, this feature enables you to:</p>
+
+                <ul>
+                    <li><strong>Reference external repositories:</strong> Include component-specific configurations from
+                        separate repositories</li>
+                    <li><strong>Maintain version control:</strong> Each submodule can be pinned to specific commits or
+                        branches</li>
+                    <li><strong>Separate concerns:</strong> Keep component configurations isolated from the main FluxCD
+                        repository</li>
+                    <li><strong>Enable team collaboration:</strong> Different teams can manage different components
+                        independently</li>
+                </ul>
+
+                <p>In my setup, I used submodules to reference separate repositories containing Helm chart values and
+                    configurations for each component (static-website, api-java, chatbot-ui, etc.). This approach was
+                    particularly effective for managing the previous <code>values.yaml</code> content that I had
+                    accumulated.</p>
+
+                <h3>3. FluxCD HelmRelease valuesFrom</h3>
+                <p>FluxCD's <code>valuesFrom</code> feature in HelmRelease resources allows you to reference multiple
+                    ConfigMaps and merge their values. According to the <a
+                        href="https://fluxcd.io/flux/components/helm/helmreleases/#values-from" target="_blank">FluxCD
+                        HelmRelease documentation</a>, this feature supports:</p>
+
+                <ul>
+                    <li><strong>Multiple ConfigMap references:</strong> Combine values from several ConfigMaps</li>
+                    <li><strong>Ordered merging:</strong> Values are merged in the order specified, with later values
+                        overriding earlier ones</li>
+                    <li><strong>Inline value overrides:</strong> Direct values in the HelmRelease take final precedence
+                    </li>
+                    <li><strong>Secret references:</strong> Also supports referencing Kubernetes Secrets for sensitive
+                        data</li>
+                </ul>
+
+                <p>I implemented a <strong>layered configuration approach</strong> using this feature:</p>
+                <ul>
+                    <li><strong>Base ConfigMap:</strong> Contains common values shared across all environments</li>
+                    <li><strong>Environment ConfigMap:</strong> Contains environment-specific overrides</li>
+                    <li><strong>Inline values:</strong> Contains frequently changing values like image tags</li>
+                </ul>
+
+                <p>This layered approach provides the flexibility to maintain consistency across environments while
+                    allowing for environment-specific customizations and rapid updates to frequently changing values.
+                </p>
+
+
+                <h2>A new folder structure</h2>
+                <p>Here's the complete folder structure I implemented, required after some Kustomization validation
+                    errors with the proper path to the Git submodules folders:</p>
+
+                <pre><code>fluxcd-gitops-repo/
+├── .gitmodules                    # Git submodule definitions
+├── clusters/
+│   ├── base/                      # Base configurations
+│   │   ├── apps/examples/         # Base HelmRelease definitions
+│   │   └── infrastructure/        # Base infrastructure components
+│   ├── components/                # Git submodules for each component
+│   │   ├── static-website/        # Static website component
+│   │   │   ├── base.values.yaml   # Base configuration
+│   │   │   ├── lcl.values.yaml    # Local environment values
+│   │   │   └── Chart.yaml         # Helm chart definition
+│   │   ├── api-java/             # Java API component...
+│   │   ├── chatbot-ui/           # Chatbot UI component...
+│   ├── local/                     # Local environment
+│   │   ├── apps/examples/        # Local-specific HelmRelease patches
+│   │   ├── infrastructure/       # Local infrastructure patches
+│   │   └── kustomization.yaml    # Local environment kustomization
+│   └── sandbox/                   # Sandbox environment
+│       ├── apps/examples/        # Sandbox-specific HelmRelease patches
+│       ├── infrastructure/       # Sandbox infrastructure patches
+│       └── kustomization.yaml    # Sandbox environment kustomization
+└── README.md</code></pre>
+
+                <h2>The Layered Configuration Approach</h2>
+                <p>One of the key insights I discovered was implementing a <strong>layered configuration
+                        approach</strong> that follows GitOps principles while maintaining flexibility across different
+                    environments. Here's how it works and its benefits.</p>
+
+                <h2>Benefits of This Approach</h2>
+                <ul>
+                    <li><strong>Environment Consistency:</strong> Base configurations ensure consistency across
+                        environments</li>
+                    <li><strong>Environment Flexibility:</strong> Environment-specific values allow for customization
+                    </li>
+                    <li><strong>Component Reusability:</strong> Components can be easily shared and reused</li>
+                    <li><strong>GitOps Compliance:</strong> All configurations are version-controlled and follow GitOps
+                        principles</li>
+                    <li><strong>Automated Updates:</strong> Image automation and ConfigMap generation reduce manual work
+                    </li>
+                    <li><strong>Scalability:</strong> Easy to add new components and environments</li>
+                </ul>
+
+
+                <h3>1. Base Configuration Layer</h3>
+                <p>The foundation of my approach starts with <code>base.values.yaml</code> files in each component
+                    submodule. These contain values that are common across all environments and should rarely change:
+                </p>
+
+                <pre><code># Example: clusters/components/static-website/base.values.yaml
+replicaCount: 1
+image:
+  pullPolicy: Always
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+resources:
+  requests:
+    cpu: 1m
+    memory: 48Mi
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 80</code></pre>
+
+                <h3>2. Environment-Specific Layer</h3>
+                <p>Each environment (local, sandbox, production) has its own values file that overrides only what's
+                    necessary:</p>
+
+                <pre><code># Example: clusters/components/static-website/lcl.values.yaml (local)
+image:
+  repository: static-web-example
+  imagePullSecrets:
+environment:
+  LOG_LEVEL: "debug"
+autoscaling:
+  enabled: false</code></pre>
+
+                <pre><code># Example: clusters/components/static-website/snbx.values.yaml (sandbox)
+image:
+  repository: registry.gitlab.com/your-org/static-web-example
+  imagePullSecrets: "registry-key"
+autoscaling:
+  enabled: true</code></pre>
+
+                <h3>3. Dynamic Values Layer</h3>
+                <p>The final layer consists of values that change frequently and are managed directly in the
+                    HelmRelease:</p>
+
+                <pre><code># In HelmRelease values section
+values:
+  image:
+    tag: "1.0.1" # {"$imagepolicy": "flux-system:static-web-imgpolicy:tag"}
+  replicaCount: 1</code></pre>
+
+                <p>This is only an example. Each component must be reviewed to determine the best option for each value
+                    item.</p>
+
+                <h2>Git Submodules for Component Management</h2>
+                <p>I implemented Git submodules to manage individual component configurations separately from the main
+                    FluxCD repository. This approach provides several benefits and follows the <a
+                        href="https://fluxcd.io/flux/guides/repository-structure/" target="_blank">FluxCD repository
+                        structure guidelines</a>:</p>
+
+                <ul>
+                    <li><strong>Separation of Concerns:</strong> Each component has its own repository with its own
+                        lifecycle</li>
+                    <li><strong>Independent Versioning:</strong> Components can be updated independently</li>
+                    <li><strong>Reusability:</strong> Components can be shared across different projects</li>
+                    <li><strong>Security:</strong> Different teams can have different access levels to different
+                        components</li>
+                </ul>
+
+                <p>Here's how the submodules are configured in <code>.gitmodules</code>:</p>
+
+                <pre><code>[submodule "clusters/components/static-website"]
+    path = clusters/components/static-website
+    url = https://gitlab.com/your-org/static-web-chart.git
+[submodule "clusters/components/chatbot-ui"]
+    path = clusters/components/chatbot-ui
+    url = https://gitlab.com/your-org/chatbot-chart.git</code></pre>
+
+                <h2>ConfigMapGenerator Implementation</h2>
+                <p>The <code>configMapGenerator</code> in Kustomization is the key to automatically creating ConfigMaps
+                    from the values files. This follows the <a
+                        href="https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/"
+                        target="_blank">Kustomize kustomization.yaml specification</a>. Here's how it's implemented:</p>
+
+                <pre><code>configMapGenerator:
+  - name: static-web-base-values
+    namespace: default
+    files:
+      - base.values.yaml=../components/static-website/base.values.yaml
+  - name: static-web-level-values
+    namespace: default
+    files:
+      - lcl.values.yaml=../components/static-website/lcl.values.yaml
+  - name: api-java-base-values
+    namespace: default
+    files:
+      - base.values.yaml=../components/api-java/base.values.yaml
+  - name: api-java-level-values
+    namespace: default
+    files:
+      - lcl.values.yaml=../components/api-java/lcl.values.yaml</code></pre>
+
+                <p>This approach automatically generates ConfigMaps for each component and environment combination,
+                    ensuring that the values are always up-to-date with the Git repository.</p>
+
+                <h2>FluxCD HelmRelease Integration</h2>
+                <p>The <code>valuesFrom</code> feature in FluxCD HelmRelease allows us to reference multiple ConfigMaps
+                    and merge their values. This approach is inspired by the <a
+                        href="https://github.com/fluxcd/flux2-kustomize-helm-example" target="_blank">FluxCD Kustomize
+                        Helm example</a>:</p>
+
+                <pre><code>apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: static-web-helmrelease
+  namespace: default
+spec:
+  valuesFrom:
+    - kind: ConfigMap
+      name: static-web-base-values
+      valuesKey: base.values.yaml
+    - kind: ConfigMap
+      name: static-web-level-values
+      valuesKey: lcl.values.yaml
+  values:
+    image:
+      repository: registry.gitlab.com/your-org/static-web-example
+      tag: "1.0.1" # {"$imagepolicy": "flux-system:static-web-imgpolicy:tag"}</code></pre>
+
+                <p>The values are merged in order: base values are applied first, then environment-specific values
+                    override them, and finally, inline values take precedence.</p>
+
+                <h2>Environment-Specific Kustomization</h2>
+                <p>Each environment has its own Kustomization file that references the appropriate values files:</p>
+
+                <ul>
+                    <li><strong>Local Environment:</strong> Uses <code>lcl.values.yaml</code> for development-specific
+                        settings</li>
+                    <li><strong>Sandbox Environment:</strong> Uses <code>snbx.values.yaml</code> for testing
+                        configurations</li>
+                    <li><strong>Production Environment:</strong> Would use <code>prod.values.yaml</code> for production
+                        settings</li>
+                </ul>
+
+                <p>In other words, the folders for each environment in FluxCD contains a Kustomization.yaml file
+                    referring to all the base files to include, the patches files to include (which refers to the proper
+                    level since it is known from the file perspective which environment I'm building) and an item for
+                    each ConfigMap to generate from which file. Although a better Kustomization could potentially
+                    simplify that file, reducing the duplication between each environment, I chose to keep it simple and
+                    referencing directly the files to be explicit; since I am weak technically on Kustomize, I have
+                    found it easier for me!</p>
 
                 <h2>A few gotchas</h2>
                 <p>One thing to note, in FluxCD and using GitLab, you have to use a submodule using the HTTPS instead of
-                    the SSH due to the authentication mechanism of FluxCD</p>
+                    the SSH due to the authentication mechanism of FluxCD. This is related to how <a
+                        href="https://fluxcd.io/flux/components/source/gitrepositories/" target="_blank">FluxCD
+                        GitRepository sources</a> handle authentication.</p>
                 <p>Kustomization is a pain! I had to change and re-change my FluxCD Git repo folder structure to ensure
                     I was meeting all security requirements. And even then, I'm still failing on one validation which
                     for now, doesn't seem to have an impact. More to investigate here!!</p>
@@ -55,49 +323,57 @@
                     changes to the FluxCD git repo and reconcile everything, which means the git source as well as the
                     helmrelease.</p>
 
-
-                <h2>A new folder structure</h2>
-                .
-                ├── application-gitops-workflow-by-gitlab.jpg
-                ├── cluster-and-platform-gitops-workflow-by-gitlab.jpg
-                ├── clusters
-                │ ├── base
-                │ │ ├── apps
-                │ │ └── infrastructure
-                │ ├── components
-                │ │ ├── api-java
-                │ │ ├── api-node
-                │ │ ├── chatbot-api
-                │ │ ├── chatbot-ui
-                │ │ ├── ollama
-                │ │ ├── static-website
-                │ │ └── txn-website
-                │ ├── local
-                │ │ ├── apps
-                │ │ ├── flux-system
-                │ │ ├── infrastructure
-                │ │ └── kustomization.yaml
-                │ └── sandbox
-                │ ├── apps
-                │ ├── flux-system
-                │ ├── infrastructure
-                │ └── kustomization.yaml
-                ├── gitops-toolkit.jpeg
-                ├── LICENSE
-                ├── push-rules-setup.jpg
-                └── README.md
-
-
-
+                <h3>Additional Challenges Encountered</h3>
+                <ul>
+                    <li><strong>FluxCD Reconciliation:</strong> After updating submodules, you need to trigger
+                        reconciliation of both the GitSource and HelmRelease</li>
+                    <li><strong>Image Automation:</strong> Ensuring that image automation works correctly with the
+                        layered approach requires careful configuration</li>
+                </ul>
 
                 <h2>Conclusion</h2>
-                <p>This is definitely starting to improve and following proper GitOps principles.</p>
-                <p>
-                    Next steps:
-                    - Still need to move cert-manager, keycloak, oauth2-proxy and Istio into a proper GitOps setup,
-                    especially how to manage their respective configuration.
-                    - Still need to investigate how to properly manage secrets!
-                </p>
+                <p>The current setup marks a significant step forward in adopting robust GitOps principles. By layering
+                    configurations through Git submodules, configMapGenerator, and FluxCD’s valuesFrom, the system now
+                    supports better automation, clarity, and environment-specific overrides—all driven by
+                    version-controlled changes.</p>
+
+                <p>The layered configuration approach with Git submodules and ConfigMapGenerator has significantly
+                    improved my GitOps workflow. While there are still challenges to overcome, particularly around
+                    secret management and infrastructure components, the foundation is now in place for a robust,
+                    scalable GitOps implementation.</p>
+
+                <h2>Next Steps</h2>
+                <ul>
+                    <li><strong>Secret Management</strong>: Evaluate and implement secure, GitOps-friendly secret
+                        handling mechanisms such as
+                        Sealed Secrets or External Secrets Operator</li>
+                    <li><strong>Infrastructure GitOps</strong>: Refactor critical services like cert-manager and Istio
+                        into fully managed GitOps
+                        deployments</li>
+                </ul>
+
+
+                <h2>References and Further Reading</h2>
+                <p>This implementation draws inspiration from several official examples and documentation from FluxCD or
+                    Git:</p>
+                <ul>
+                    <li><a href="https://github.com/fluxcd/flux2-multi-tenancy" target="_blank">FluxCD Multi-Tenancy
+                            Example</a> - Shows how to structure repositories for multi-tenant environments</li>
+                    <li><a href="https://github.com/fluxcd/flux2-kustomize-helm-example" target="_blank">FluxCD
+                            Kustomize Helm Example</a> - Demonstrates the integration of Kustomize with Helm charts</li>
+                    <li><a href="https://fluxcd.io/flux/guides/repository-structure/" target="_blank">FluxCD Repository
+                            Structure Guide</a> - Best practices for organizing FluxCD repositories</li>
+                    <li><a href="https://fluxcd.io/flux/components/source/gitrepositories/" target="_blank">FluxCD
+                            GitRepository Documentation</a> - Official documentation for Git repository sources</li>
+                    <li><a href="https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/"
+                            target="_blank">Kustomize kustomization.yaml Specification</a> - Official Kustomize
+                        configuration reference</li>
+                    <li><a href="https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/configmapgenerator/"
+                            target="_blank">Kustomize configMapGenerator Documentation</a> - Detailed guide for
+                        ConfigMap generation</li>
+                    <li><a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules" target="_blank">Git Submodules
+                            Guide</a> - Comprehensive documentation on Git submodules</li>
+                </ul>
             </div>
         </article>
 
