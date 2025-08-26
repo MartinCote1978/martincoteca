@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>My Experience with Lovable.dev - From idea to production - Martin Cote</title>
+    <title>My Experience with Lovable.dev - Martin Cote</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
@@ -20,52 +20,57 @@
 
         <article>
             <header class="blog-header">
-                <div class="blog-date">July 5, 2025</div>
-                <h1 class="blog-title">My Experience with Lovable.dev - From idea to production</h1>
+                <div class="blog-date">September 7, 2025</div>
+                <h1 class="blog-title">My Experience with Lovable.dev</h1>
                 <div class="tags">
                     <span class="tag">Lovable.dev</span>
                     <span class="tag">AI</span>
                     <span class="tag">AI Agent</span>
                     <span class="tag">Chatbot</span>
                     <span class="tag">LLM</span>
-                    <span class="tag">Kubernetes</span>
-                    <span class="tag">GCP</span>
-                    <span class="tag">OAuth2-proxy</span>
-                    <span class="tag">Keycloak</span>
-                    <span class="tag">Istio</span>
-                    <span class="tag">Ollama</span>
                     <span class="tag">React</span>
                     <span class="tag">TypeScript</span>
                     <span class="tag">Vite</span>
-                    <span class="tag">Helm</span>
-                    <span class="tag">Docker</span>
+                    <span class="tag">Keycloak</span>
+                    <span class="tag">Ollama</span>
                 </div>
             </header>
 
             <div class="blog-content">
-                <p>In this post, I'll share my journey of building a modern, solid chatbot UI using
-                    <strong>Lovable.dev</strong> as the main "editor" and "AI assistant". What started as a simple UI
-                    prototype evolved into a comprehensive system with authentication, LLM integration, and cloud-native
-                    deployment on Google Cloud Platform (GCP) with Kubernetes.
+                <p>In this post, I wanted to share my personal experience of building a modern chatbot UI using
+                    <a href="https://lovable.dev" target="_blank"><strong>Lovable.dev</strong></a> as the main "editor"
+                    and "AI assistant". What started as a simple UI prototype evolved into a comprehensive chatbot
+                    application with authentication integration, LLM API connectivity, and a fully functional chat
+                    interface with persistence.
                 </p>
 
                 <p><strong>TL;DR;</strong></p>
-                <p>I highly recommend it!</p>
+                <p>Lovable.dev is impressive for rapid UI development, but requires specific prompting and iterative
+                    refinement to achieve production-ready results.</p>
 
                 <h2>Starting with Lovable.dev</h2>
                 <p>I began my chatbot project by exploring <strong>Lovable.dev</strong>, an AI-powered development
-                    platform that promised to accelerate UI creation. The initial experience was impressive - I was able
-                    to describe my vision for a "monochrome chatbot UI" and Lovable.dev generated a complete React
+                    platform that promised to accelerate UI creation, by trying to replicate a previous attempt at a
+                    chatbot UI done "by hand" (i.e. just me coding it!). The initial experience wasn't so impressive but
+                    good enough to keep me intrigued, interested and wondering if I could try a better approach.
+                    As such, when I detailed out my request and improved my prompt,
+                    the results were far more impressive and genuinely great - I was able
+                    to describe my vision for a "simple chatbot UI" and Lovable.dev generated a complete React
                     application with TypeScript, Vite, and shadcn-ui components.</p>
 
                 <p>The generated codebase included:</p>
                 <ul>
-                    <li>A clean, responsive chat interface with message bubbles</li>
-                    <li>Sidebar with chat history and model selection</li>
-                    <li>Settings overlay with theme switching (light/dark mode)</li>
-                    <li>File attachment capabilities and conversation actions</li>
-                    <li>Modern UI components using Radix UI primitives</li>
+                    <li>A clean, responsive chat interface with message bubbles (working!)</li>
+                    <li>Sidebar with chat history and model selection (working!)</li>
+                    <li>Settings overlay with theme switching (light/dark mode) and language setting (working!)</li>
+                    <li>File attachment capabilities and conversation actions (not fully implemented yet)</li>
                 </ul>
+
+                <p>Here's the UI end result rendered by Lovable.dev and integrated within entire infrastructure stack
+                    (which leverages among others Kubernetes, Helm, Istio, Keycloak, OAuth2-proxy, Metrics-Server):
+                    <img src="./chatbot-ui.jpg" alt="Chatbot UI developed by Lovable.dev" class="img-fluid"
+                        style="width: 100%; height: auto;">
+                </p>
 
                 <pre><code>// Example of the generated component structure
 src/
@@ -82,186 +87,198 @@ src/
     ├── ollamaApi.ts         // LLM API integration
     └── models.ts            // Model configuration</code></pre>
 
-                <h2>Connecting to Ollama API</h2>
-                <p>With the UI foundation in place, I needed to connect it to a Large Language Model (LLM). I chose
-                    <strong>Ollama</strong> for its flexibility and local model support. The integration involved
-                    creating API utilities to communicate with Ollama's REST API.
+                <h2>The Development Journey with Lovable.dev</h2>
+                <p>Looking at my interaction history with Lovable.dev, I can trace the evolution of this project through
+                    specific requests and iterations. The development process revealed both the strengths and
+                    limitations of AI-assisted development.</p>
+
+                <h3>Initial Setup and Core Features</h3>
+                <p>The project started with Lovable.dev generating the basic UI structure. I originally had it get the
+                    foundation laid with Vite, React, and shadcn-ui components. It is important to note, I specifically
+                    picked and specified the framework to use and to some extent, how to use it. Previous attempt had
+                    created a weak application from that perspective with little capacity to improve it or develop on
+                    it; the original version created seemed to work only on Lovable.dev. Once I specified the framework,
+                    etc., I was able to run on Lovable.dev and locally for local development. Afterwards, the initial
+                    generated code was impressive but required specific prompting to achieve the desired functionality.
                 </p>
 
-                <p>Key features of the Ollama integration:</p>
+                <p>Key early achievements included:</p>
                 <ul>
-                    <li>Dynamic model selection from environment variables</li>
-                    <li>Support for multiple LLM models (Llama 3.2, Gemma 3, etc.)</li>
-                    <li>Real-time streaming responses</li>
-                    <li>Error handling and retry logic</li>
+                    <li>Creating a chat interface with proper message bubbles and styling</li>
+                    <li>Implementing a sidebar with chat history and model selection</li>
+                    <li>Adding dark/light theme switching functionality</li>
+                    <li>Setting up the basic project structure with TypeScript and Vite</li>
                 </ul>
 
-                <pre><code>// Example: Ollama API integration
-export const sendMessage = async (message: string, model: string) => {
-  const response = await axiosInstance.post('/api/generate', {
-    model: model,
-    prompt: message,
-    stream: false
-  });
-  return response.data;
-};</code></pre>
+                <h3>The Authentication Challenge</h3>
+                <p>One of the most significant challenges I faced was implementing Keycloak authentication. I struggled
+                    for a long time (to say the least!) to get the Keycloak implementation working in the chatbot UI,
+                    although I knew it was working in my previous "manual" project. The issue wasn't with Keycloak
+                    itself, but
+                    with integrating it properly into the React application generated by Lovable.dev using the Keycloak
+                    JavaScript adapter.
+                </p>
 
-                <h2>Building the Infrastructure Stack</h2>
-                <p>The real challenge began when I decided to deploy this as a production system. I built a
-                    comprehensive infrastructure using modern cloud-native tools:</p>
-
-                <h3>Helm Charts for Deployment</h3>
-                <p>I created custom Helm charts for each component:</p>
+                <p>The authentication integration involved many, many iterations with Lovable.dev:</p>
                 <ul>
-                    <li><strong>chatbot-chart</strong>: Deploys the React UI with environment variable injection</li>
-                    <li><strong>chatbot-api-chart</strong>: Backend API service for chat management</li>
-                    <li><strong>ollama-chart</strong>: Ollama LLM service with model management</li>
+                    <li>Fixing infinite redirect loops in the authentication flow</li>
+                    <li>Implementing proper token handling and refresh logic</li>
+                    <li>Creating identity provider adapters for different authentication methods</li>
+                    <li>Debugging authentication flows and state management</li>
                 </ul>
 
-                <p>The Dockerfile I created supports runtime environment injection, allowing the same container to work
-                    across different environments (local, staging, production).</p>
+                <p>This phase required the most back-and-forth with Lovable.dev, as the AI needed to understand the
+                    specific requirements of Keycloak integration and how to properly handle authentication state in a
+                    React application. Myself not being so strong on this front, I had to do a lot of trial and error
+                    to get it working. I had to do a lot of research on the Keycloak JavaScript adapter myself (even
+                    though I would assume it is fairly standard at this point) and how to properly use it in a React
+                    application. Every change I made required a whole cycle waiting for Lovable.dev to complete the
+                    changes, have them committed to GitHub, then for me to pull them locally and boot up the UI locally
+                    in the integration setup with my local cluster. A tedious process that took a very long time!
+                </p>
 
-                <h3>Authentication with Keycloak and OAuth2-proxy</h3>
-                <p>Security was a top priority. I implemented a robust authentication system:</p>
+                <h3>API Integration and Testing</h3>
+                <p>Implementing the API integrations for Ollama and my chatbot API (the one persisting the various chats
+                    and
+                    messages, etc.) was fairly easy, although slightly longer to test out since I had to put the request
+                    in Lovable, then get the code locally to test it running locally.</p>
+
+                <p>The API integration process involved:</p>
                 <ul>
-                    <li><strong>Keycloak</strong> as the identity provider with custom realm configuration</li>
-                    <li><strong>OAuth2-proxy</strong> for session management and token validation</li>
-                    <li>Multiple authentication adapters (Keycloak, Auth0, Okta, stub for development)</li>
-                    <li>JWT token handling with automatic refresh</li>
+                    <li>Creating API configuration for Ollama's REST API</li>
+                    <li>Implementing chat management API calls for saving conversations</li>
+                    <li>Adding proper error handling and retry logic</li>
+                    <li>Setting up environment-based configuration</li>
                 </ul>
 
-                <pre><code>// Example: Keycloak adapter configuration
-export class KeycloakAdapter implements IdentityProvider {
-  private keycloak: Keycloak.KeycloakInstance;
-  
-  async initialize(): Promise<void> {
-    this.keycloak = new Keycloak({
-      url: window.ENV.VITE_SSO_SERVER_URL,
-      realm: window.ENV.VITE_OAUTH_REALM,
-      clientId: window.ENV.VITE_OAUTH_CLIENT_ID
-    });
-  }
-}</code></pre>
+                <p>This iterative process of requesting code from Lovable.dev, implementing it locally, testing, and
+                    then requesting refinements became the standard workflow for the project. In order to properly
+                    create the API integration, I provided a detail REST API design, where to put the code, when to make
+                    each call within the UI flow and let it handle the code implementation. Using that technique, it was
+                    fairly quick and very impressive. It could clearly logically implement the API call, it just
+                    required the specifics requiremnts to meet.</p>
 
-                <h3>Service Mesh with Istio</h3>
-                <p>I used <strong>Istio</strong> as the service mesh to handle:</p>
+                <h3>UI Enhancements and Bug Fixes</h3>
+                <p>As the project progressed, I discovered various UI issues that needed attention. Althought it created
+                    those bugs itself, Lovable.dev proved valuable for quickly implementing fixes and enhancements:</p>
+
                 <ul>
-                    <li>Traffic routing and load balancing</li>
-                    <li>CORS policy management</li>
-                    <li>mTLS encryption between services</li>
-                    <li>Request/response transformation</li>
-                    <li>Integration with OAuth2-proxy for authentication</li>
+                    <li><strong>Model Selector Issues</strong>: Fixed the model selector dropdown that kept defaulting
+                        back to "Llama 3.2" instead of maintaining user selection</li>
+                    <li><strong>Chat Page Flickering</strong>: Resolved infinite re-render loops that caused screen
+                        flickering when chats were selected. This was probably the biggest bug the AI assistant
+                        introduced while working on other items and required a few prompts to resolve.</li>
+                    <li><strong>About Page Bug</strong>: Fixed authentication re-looping issues when trying to display
+                        the about overlay</li>
+                    <li><strong>Dark Mode Styling</strong>: Corrected dark mode implementation for the chat input area
+                    </li>
+                    <li><strong>Chat Renaming</strong>: Implemented inline rename functionality for chat titles</li>
+                    <li><strong>Model Picker Display</strong>: Fixed text wrapping and ellipsis for long model
+                        descriptions</li>
                 </ul>
 
-                <p>The Istio VirtualService configuration routes traffic appropriately:</p>
+                <h3>Login Page Customization</h3>
+                <p>I also used Lovable.dev to customize a few components of the app, such as the login experience:</p>
                 <ul>
-                    <li><code>/ollama/*</code> → Ollama service</li>
-                    <li><code>/chats/*</code> → Chatbot API service</li>
-                    <li><code>/oauth2/*</code> → OAuth2-proxy</li>
-                    <li>Root traffic → Chatbot UI</li>
+                    <li>Changed the button text from "Sign in with Keycloak" to "Sign in with email or username"</li>
+                    <li>Added a "Sign in with Google" button (placeholder for future implementation)</li>
+                    <li>Improved the overall user experience of the authentication flow</li>
                 </ul>
 
-                <h2>Development Journey and Challenges</h2>
-                <p>Looking at my Git commit history, I can see the evolution of this project:</p>
-
-                <h3>Initial Setup (Commits 104-95)</h3>
-                <p>The project started with Lovable.dev generating the basic UI structure. Early commits show the
-                    foundation being laid with Vite, React, and shadcn-ui components.</p>
-
-                <h3>Authentication Integration (Commits 94-70)</h3>
-                <p>This phase involved significant work on Keycloak integration, including:</p>
-                <ul>
-                    <li>Fixing infinite redirect loops</li>
-                    <li>Implementing proper token handling</li>
-                    <li>Creating identity provider adapters</li>
-                    <li>Debugging authentication flows</li>
-                </ul>
-
-                <h3>API and Infrastructure (Commits 69-40)</h3>
-                <p>Focus shifted to backend integration and infrastructure:</p>
-                <ul>
-                    <li>Ollama API integration</li>
-                    <li>Docker containerization with environment injection</li>
-                    <li>Kubernetes deployment configurations</li>
-                    <li>CORS and proxy configuration</li>
-                </ul>
-
-                <h3>UI Enhancements (Commits 39-20)</h3>
-                <p>User experience improvements:</p>
-                <ul>
-                    <li>Dark/light theme implementation</li>
-                    <li>File attachment functionality</li>
-                    <li>Like/dislike buttons for responses</li>
-                    <li>Copy-paste functionality</li>
-                    <li>Settings overlay with language selection</li>
-                </ul>
-
-                <h3>Production Readiness (Commits 19-1)</h3>
-                <p>Final polish and production deployment:</p>
-                <ul>
-                    <li>Unit test framework setup with Vitest</li>
-                    <li>Layout and scrolling improvements</li>
-                    <li>Final authentication fixes</li>
-                    <li>Documentation completion</li>
-                </ul>
-
-                <h2>Key Learnings</h2>
-                <p>This project taught me several valuable lessons:</p>
+                <h2>Key Learnings from Lovable.dev</h2>
+                <p>This experience was overall very good and it definitely helped refactoring my UI chatbot, while
+                    learning about AI-assisted development:</p>
 
                 <h3>Lovable.dev Strengths</h3>
                 <ul>
                     <li><strong>Rapid Prototyping</strong>: Generated a complete, working UI in minutes</li>
-                    <li><strong>Modern Stack</strong>: Uses current best practices (React 18, TypeScript, Vite)</li>
-                    <li><strong>Component Quality</strong>: Generated components were well-structured and extensible
+                    <li><strong>Modern Stack</strong>: Although it needed to be prompted to do so at first, uses current
+                        best practices (React 18, TypeScript, Vite) once ongoing</li>
+                    <li><strong>Component Quality</strong>: Generated components were well-structured and extensible (at
+                        least in my view!)
                     </li>
-                    <li><strong>Customization</strong>: Easy to modify and extend the generated code</li>
+                    <li><strong>Quick Iterations</strong>: Easy to request changes and improvements</li>
+                    <li><strong>Quick features additions</strong>: Although I speak only French and English (and
+                        currently learning Spanish), Lovable.dev was able to add all 3 languages quickly and easily
+                        without me being fluent on it. I suspect a lot of languages support will be added in the near
+                        future to all applications out there, to the benefits of those communities.</li>
+                    <li><strong>Bug Fixing</strong>: Excellent for quickly identifying and fixing common issues</li>
                 </ul>
 
-                <h3>Integration Challenges</h3>
+                <h3>Development Process Insights</h3>
                 <ul>
-                    <li><strong>Authentication Complexity</strong>: Keycloak integration required significant debugging
+                    <li><strong>Specific Prompting Required</strong>: The quality of output directly correlates with the
+                        specificity of requests. In other words, yes, it can achieve a certain level with simple
+                        prompts, however, if you want the project to last, you need to be specific and detailed in your
+                        requests, including specific design patterns to use, technologies components or frameworks to
+                        leverage, and code implementation to follow.</li>
+                    <li><strong>Iterative Refinement</strong>: Multiple iterations are often needed to achieve the
+                        desired result</li>
+                    <li><strong>Testing Integration</strong>: Code needs to be tested locally after generation, creating
+                        a feedback loop longer than usual or than with other tools like <strong>Claude Code</strong> or
+                        <strong>Gemini CLI</strong>, where those are changing directly in the local working directory of
+                        the user as opposed to Lovable.dev doing its changes to its own local working directory.
                     </li>
-                    <li><strong>Environment Management</strong>: Runtime environment injection was crucial for
-                        containerization</li>
-                    <li><strong>Service Mesh Configuration</strong>: Istio routing and CORS policies needed careful
-                        tuning</li>
-                    <li><strong>Token Management</strong>: Proper JWT handling across services required attention</li>
+                    <li><strong>Context Awareness</strong>: Lovable.dev maintains good context across multiple requests
+                        in a session</li>
+                    <li><strong>Complex Integration Challenges</strong>: Authentication and API integrations require
+                        multiple iterations</li>
+                </ul>
+
+                <h3>Limitations and Challenges</h3>
+                <ul>
+                    <li><strong>Authentication Complexity, as an example</strong>: Keycloak integration required
+                        significant debugging and multiple attempts and I suspect it would be the same for any
+                        integrations requiring various components outside of the project. In other words, if everything
+                        is contained within the project, Lovable.dev will have an easier time to figure out the proper
+                        implementation.</li>
+                    <li><strong>Error Handling, as an example for code quality</strong>: Some edge cases and error
+                        scenarios needed manual intervention, especially on improving it for debugging purposes later
+                        on.
+                    </li>
                 </ul>
 
                 <h2>Current State and Future Plans</h2>
-                <p>The chatbot is now running in production with:</p>
+                <p>The chatbot UI is now running on my local Kubernetes cluster with a fully functional UI that
+                    includes:</p>
                 <ul>
-                    <li>✅ Modern React UI with TypeScript</li>
+                    <li>✅ Modern React UI with TypeScript and Vite</li>
                     <li>✅ Ollama LLM integration</li>
-                    <li>✅ Keycloak authentication</li>
-                    <li>✅ Istio service mesh</li>
-                    <li>✅ Kubernetes deployment</li>
-                    <li>✅ Docker containerization</li>
-                    <li>✅ Environment-based configuration</li>
+                    <li>✅ Keycloak authentication with OAuth 2.0</li>
+                    <li>✅ Chat management and persistence</li>
+                    <li>✅ Dark/light theme switching</li>
+                    <li>✅ Responsive design with sidebar navigation</li>
+                    <li>✅ Model selection and chat history</li>
                 </ul>
 
                 <p>Future enhancements planned:</p>
                 <ul>
-                    <li>Enhanced conversation management</li>
-                    <li>Model fine-tuning capabilities</li>
-                    <li>Advanced analytics and monitoring</li>
-                    <li>Multi-tenant support</li>
+                    <li>Some feature implementation, such as File attachment functionality</li>
+                    <li>Google OAuth integration</li>
+                    <li>Improved code quality and error handling, still</li>
                 </ul>
 
                 <h2>Conclusion</h2>
-                <p>Lovable.dev proved to be an excellent starting point for rapid UI development. The generated code was
-                    production-ready and followed modern React patterns. However, the real value came from the
-                    comprehensive infrastructure I built around it - the authentication system, service mesh, and
-                    containerized deployment.</p>
+                <p>Lovable.dev proved to be an excellent tool for rapid UI development and iterative refinement. The
+                    generated code was solid and followed modern React patterns (again, at least, what it seems to me!).
+                    The key to success was providing specific, detailed requirements and being prepared for multiple
+                    iterations to achieve the desired functionality.</p>
 
-                <p>This project demonstrates how AI-powered development tools like Lovable.dev can accelerate the
-                    initial development phase, but they work best when integrated into a well-architected, cloud-native
-                    infrastructure. The combination of rapid prototyping with robust infrastructure creates a powerful
-                    development workflow.</p>
+                <p>This small experience demonstrates, at least for me, how an AI-powered development tool like
+                    Lovable.dev can accelerate the initial development phase as well as provide ongoing support for bug
+                    fixes and enhancements. The combination of rapid prototyping with iterative refinement creates a
+                    powerful development workflow that can significantly reduce development time while maintaining code
+                    quality. I will certainly look into equivalent tooling within the context of my work to adjust
+                    certain workflows, giving me ideas for a larger use more than I was already doing.
+                </p>
 
-                <p>The entire journey, from Lovable.dev prototype to production deployment, took approximately 3 months
-                    and resulted in a scalable, secure chatbot platform that can serve as a foundation for more complex
-                    AI applications.</p>
+                <p>The entire journey, from initial Lovable.dev prototype to a running chatbot UI, took approximately 3
+                    months and resulted in a chatbot single page app that serves as an excellent example of AI-assisted
+                    development. To compare, my initial chatbot UI built "manually" using the same stack had taken me 3
+                    months as well but wasn't anywhere near the level of completion (most of it actually didn't work!).
+                </p>
+
+                <p>This is definitely the future!</p>
             </div>
         </article>
 
