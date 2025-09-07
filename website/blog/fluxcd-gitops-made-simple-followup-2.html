@@ -34,12 +34,15 @@
             <div class="blog-content">
                 <p>In my previous posts, <a href="fluxcd-gitops-made-simple.html">"FluxCD GitOps Made Simple: My Journey
                         to Automated Kubernetes Deployments"</a> and its <a
-                        href="fluxcd-gitops-made-simple-followup-1.html">follow-up</a>, I documented my journey from
+                        href="fluxcd-gitops-made-simple-followup.html">follow-up</a>, I documented my journey from
                     basic FluxCD setup to implementing a layered configuration approach using Git submodules and
-                    ConfigMap generation. However, as I continued to scale my GitOps implementation, I encountered
+                    ConfigMap generation. However, as I continued to scale and improve my GitOps implementation, I
+                    encountered
                     significant challenges with Kustomization validation, ConfigMap dependency management, and the
-                    complexity of maintaining multiple environment configurations. This post details the critical
-                    refinements I made to address these issues and achieve a more robust, maintainable GitOps workflow.
+                    complexity of maintaining multiple environment configurations while maximizing the automation I was
+                    targeting for. This post details the critical
+                    refinements I made to address these issues and achieve a more robust, automated, maintainable GitOps
+                    workflow.
                 </p>
 
                 <p>The evolution of my FluxCD setup has been driven by the need to solve three core challenges:

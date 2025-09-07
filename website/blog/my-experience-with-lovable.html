@@ -189,6 +189,28 @@ src/
                 <p>This experience was overall very good and it definitely helped refactoring my UI chatbot, while
                     learning about AI-assisted development:</p>
 
+                <h3>One-shot success: chat renaming</h3>
+                <p>One of the most impressive moments using Lovable.dev was adding the chat renaming feature. I already
+                    had the REST API ready and tested independently in Postman. After writing a detailed prompt,
+                    Lovable.dev generated the entire UI and wiring correctly on the first try. Here’s the prompt I used:
+                </p>
+                <code>
+                    In the dot-dot-dot button of the chat objects on the left side bar, if the user clicks on "Rename",
+                    add the code to first, display a one-line textbox bar at the place where the chat's title is (the one
+                    where the "Rename" option was selected from), pre-loaded it with the value of the chat's title.  the
+                    whole textbox bar should be wrapped within a rectangle displaying the textbox aligned on the left side
+                    and at the end of it on the right side, 2 buttons, one with a red X button to cancel the action (if
+                    that one is clicked, return in the previous view by removing the textbox, rectangle and buttons), and
+                    one with a green checkmark (if clicked, the action should call the updateChat method with the new title
+                    entered, if the API call is successful, the chat object is changed in the state and the left side bar
+                    object is refreshed to display the new state; if API unsuccessful, it gives a simple javascript pop
+                    error and the rectangle, text bar and buttons are removed).
+                </code>
+
+                <p>Here is the result:</p>
+                <img src="./chatbot-rename-feature.jpg" alt="Chatbot rename feature" class="img-fluid d-block mx-auto"
+                    style="width: 75%; height: auto;">
+
                 <h3>Lovable.dev Strengths</h3>
                 <ul>
                     <li><strong>Rapid Prototyping</strong>: Generated a complete, working UI in minutes</li>
