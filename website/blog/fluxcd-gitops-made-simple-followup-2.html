@@ -24,17 +24,25 @@
                 <h1 class="blog-title">FluxCD GitOps Made Simple: A Follow-up (bis)</h1>
                 <div class="tags">
                     <span class="tag">Kubernetes</span>
-                    <span class="tag">GCP</span>
-                    <span class="tag">Cloud Native</span>
-                    <span class="tag">GitOps</span>
                     <span class="tag">FluxCD</span>
+                    <span class="tag">GitOps</span>
+                    <span class="tag">Kustomize</span>
+                    <span class="tag">Helm</span>
+                    <span class="tag">ConfigMap</span>
+                    <span class="tag">Git</span>
+                    <span class="tag">Git Submodules</span>
+                    <span class="tag">Infrastructure as Code</span>
+                    <span class="tag">Secrets Management</span>
+                    <span class="tag">Istio</span>
+                    <span class="tag">GCP</span>
                 </div>
             </header>
 
             <div class="blog-content">
-                <p>In my previous posts, <a href="fluxcd-gitops-made-simple.html">"FluxCD GitOps Made Simple: My Journey
+                <p>In my previous posts, <a href="002-fluxcd-gitops-made-simple.html">"FluxCD GitOps Made Simple: My
+                        Journey
                         to Automated Kubernetes Deployments"</a> and its <a
-                        href="fluxcd-gitops-made-simple-followup.html">follow-up</a>, I documented my journey from
+                        href="003-fluxcd-gitops-made-simple-followup.html">follow-up</a>, I documented my journey from
                     basic FluxCD setup to implementing a layered configuration approach using Git submodules and
                     ConfigMap generation. However, as I continued to scale and improve my GitOps implementation, I
                     encountered
@@ -85,9 +93,7 @@
 
                 <h3>1. ConfigMap Changes were not being detected</h3>
                 <p>This was THE major issue, as I was not able to detect when the ConfigMap changes were being made, and
-                    therefore, I was not able to trigger the deployment of the HelmRelease. This was a major issue, as
-                    I was not able to detect when the ConfigMap changes were being made, and therefore, I was not able
-                    to trigger the deployment of the HelmRelease.</p>
+                    therefore, I was not able to trigger the deployment of the HelmRelease.</p>
 
                 <h3>2. Kustomization Validation Errors</h3>
                 <p>The most frustrating challenge was Kustomization's strict validation rules. When I initially tried to
@@ -146,6 +152,11 @@
                 <p>The core of my solution is the dedicated ConfigMap generation in the <code>config/</code> directory.
                     Here's how it works:</p>
 
+                <p><strong>Terminology:</strong> <em>base</em> = default values shared across environments;
+                    <em>level</em> = environment-specific overrides (e.g., local, sandbox); <em>inflight</em> =
+                    near-term or runtime overrides applied during deployment.
+                </p>
+
                 <pre><code># clusters/local/config/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -167,7 +178,7 @@ generatorOptions:
 commonLabels:
   config-managed-by: flux</code></pre>
 
-                <p>In effect, the ConfgMap is created using a sequence of values YAML files, each bringing in the
+                <p>In effect, the ConfigMap is created using a sequence of values YAML files, each bringing in the
                     appropriate values for the component, which is actually the component Git repository allowing the
                     developer of that particular component to maintain the content of those values files. First, the
                     base values are included and provide the common values for the component, then the "level" values
@@ -256,6 +267,11 @@ spec:
                     was not able to trigger the deployment of the HelmRelease.
                 </p>
 
+                <p><em>Why:</em> Forces a detectable content change so Flux reconciles when only values update.
+                    <em>Trade-offs:</em> introduces a synthetic diff and mild churn, which is acceptable for
+                    reliability.
+                </p>
+
                 <h2>Specific Configuration Examples</h2>
                 <p>Here are some specific examples from my implementation that demonstrate the layered configuration
                     approach:</p>
@@ -312,7 +328,7 @@ autoscaling:
                 <h3>1. I'm still internalizing Kustomize's loading and composition model</h3>
                 <p>Path resolution and resource layering are subtle; small structure choices significantly change
                     outcomes. I still don't have a good understanding of it, but I'm getting there. I was only able to
-                    progress and move foward with the help of an AI assistant, and a lot of trial and error.</p>
+                    progress and move forward with the help of an AI assistant, and a lot of trial and error.</p>
 
                 <h3>2. Git submodules add friction, but clarify ownership</h3>
                 <p>Letting component owners ship their own values/config separates Dev and Ops cleanly—even with an
@@ -321,7 +337,7 @@ autoscaling:
                 <h3>3. AI assistants unlocked the apps/infra/config split</h3>
                 <p>The suggested layout with explicit dependencies made the design suggestions and allowed me to adjust
                     the structure to my needs. In fact, it was the combination of a few AI assistants with a lot of
-                    trial and error that allowed me to progress and move foward. </p>
+                    trial and error that allowed me to progress and move forward. </p>
 
                 <h3>4. Base/level/inflight values via ConfigMaps and composed via FluxCD are incredibly practical</h3>
                 <p>Layered values provide sane defaults, environment overrides, and safe runtime tweaks while staying
@@ -356,7 +372,8 @@ autoscaling:
                     and robust.</p>
 
                 <h2>Next Steps</h2>
-                <p>Looking forward, I plan to continue evolving this GitOps implementation in several areas:</p>
+                <p>Looking forward, I plan to continue evolving this GitOps implementation in several areas and learn
+                    from those:</p>
 
                 <h3>1. Enhanced Secret Management</h3>
                 <p>Implement more sophisticated secret management using tools like Sealed Secrets, Vault or others to
@@ -367,9 +384,10 @@ autoscaling:
                     OAuth2-proxy, and other critical services that are currently managed outside the FluxCD workflow.
                 </p>
 
-                <p>The foundation is now in place for a robust, scalable GitOps implementation that can grow with my
-                    needs while maintaining the principles of declarative configuration, version control, and automated
-                    deployment.</p>
+                <p>I believe the foundation is now in place for a robust, scalable GitOps implementation that can grow
+                    with my needs while maintaining the principles of declarative configuration, version control, and
+                    automated deployment. I'm sure there are still many things to improve and learn, but I'm happy with
+                    the progress I've made so far. It was a long journey, but it was worth it.</p>
 
                 <h2>References and Further Reading</h2>
                 <p>This implementation builds upon several key resources and best practices:</p>
@@ -389,9 +407,9 @@ autoscaling:
                 </ul>
 
                 <p><i>This blog post represents the culmination of months of experimentation and refinement in GitOps
-                        practices. The lessons learned here should help others avoid similar challenges and build more
-                        robust Kubernetes deployment workflows. It is in no way the absolute best approach but my
-                        personal experience with it.</i></p>
+                        practices. I am hoping the lessons learned here should help others avoid similar challenges and
+                        build more robust Kubernetes deployment workflows. It is in no way the absolute, best-of-all
+                        approach but my personal experience with it.</i></p>
 
             </div>
         </article>
