@@ -40,23 +40,20 @@
 
             <div class="blog-content">
                 <p>In my previous posts, <a href="002-fluxcd-gitops-made-simple.html">"FluxCD GitOps Made Simple: My
-                        Journey
-                        to Automated Kubernetes Deployments"</a> and its <a
+                        Journey to Automated Kubernetes Deployments"</a> and its <a
                         href="003-fluxcd-gitops-made-simple-followup.html">follow-up</a>, I documented my journey from
                     basic FluxCD setup to implementing a layered configuration approach using Git submodules and
                     ConfigMap generation. However, as I continued to scale and improve my GitOps implementation, I
-                    encountered
-                    significant challenges with Kustomization validation, ConfigMap dependency management, and the
-                    complexity of maintaining multiple environment configurations while maximizing the automation I was
-                    targeting for. This post details the critical
-                    refinements I made to address these issues and achieve a more robust, automated, maintainable GitOps
-                    workflow.
+                    encountered significant challenges with Kustomization validation, ConfigMap dependency management,
+                    and the complexity of maintaining multiple environment configurations while maximizing the
+                    automation I was targeting for. This post details the critical refinements I made to address these
+                    issues and achieve a more robust, automated, maintainable GitOps workflow.
                 </p>
 
                 <p>Note, my personal objective with these tools is always the same: trying to maintain a basic
-                    implementation of each component in use, allowing for maximum
-                    flexibility and reusability while keeping the implementation simple and easy to understand. In other
-                    words, using the tools the proper way, as it was designed to be used! (or at least, try to do so)
+                    implementation of each component in use, allowing for maximum flexibility and reusability while
+                    keeping the implementation simple and easy to understand. In other words, using the tools the proper
+                    way, as it was designed to be used! (or at least, try to do so)
                 </p>
 
                 <p>
@@ -66,15 +63,16 @@
                     the time, it had limited effect on my deployment),
                     <strong>ConfigMap dependency management</strong> that required careful orchestration between
                     component updates and FluxCD reconciliation (which wasn't working properly in all cases), and
-                    <strong>monitoring and health checks</strong> to
-                    ensure the entire system remained in a consistent state (not fully achieved, but much better than
-                    before). Through this journey, I've learned that
+                    <strong>monitoring and health checks</strong> to ensure the entire system remained in a consistent
+                    state (not fully achieved, but much better than before). Through this journey, I've learned that
                     while Kustomization is powerful, it demands precise understanding of its validation rules and
                     dependency chains, especially with the folder structure I was using.
                 </p>
 
                 <p>My current setup now features a sophisticated <code>configMapGenerator</code> implementation that
-                    automatically creates ConfigMaps from component-specific values files stored in Git submodules. This
+                    automatically creates ConfigMaps from component-specific values files stored in Git submodules of my
+                    main FluxCD repository. Each of those Git submodules link to the their component-specific Git
+                    repositories, which are the actual repositories containing the component-specific values files. This
                     approach ensures that all configuration changes are version-controlled and follow GitOps principles,
                     while the <code>valuesFrom</code> feature in HelmRelease resources allows for layered configuration
                     management across multiple environments. The key breakthrough came when I restructured my repository
@@ -93,7 +91,8 @@
 
                 <h3>1. ConfigMap Changes were not being detected</h3>
                 <p>This was THE major issue, as I was not able to detect when the ConfigMap changes were being made, and
-                    therefore, I was not able to trigger the deployment of the HelmRelease.</p>
+                    therefore, I was not able to trigger the deployment of the HelmRelease. It was properly working in
+                    some scenarios, but not in others.</p>
 
                 <h3>2. Kustomization Validation Errors</h3>
                 <p>The most frustrating challenge was Kustomization's strict validation rules. When I initially tried to
@@ -315,10 +314,10 @@ autoscaling:
                 <pre><code># .gitmodules
 [submodule "clusters/components/static-website"]
     path = clusters/components/static-website
-    url = https://gitlab.com/bouc-io/application/examples/static-website/static-web-chart.git
+    url = URL_TO_THE_COMPONENT_SPECIFIC_GIT_REPOSITORY/static-web-chart.git
 [submodule "clusters/components/api-java"]
     path = clusters/components/api-java
-    url = https://gitlab.com/bouc-io/application/examples/api-sprngbt-example/api-java-chart.git
+    url = URL_TO_THE_COMPONENT_SPECIFIC_GIT_REPOSITORY/api-java-chart.git
 # ... other components</code></pre>
 
                 <h2>Key Lessons Learned</h2>
@@ -337,7 +336,8 @@ autoscaling:
                 <h3>3. AI assistants unlocked the apps/infra/config split</h3>
                 <p>The suggested layout with explicit dependencies made the design suggestions and allowed me to adjust
                     the structure to my needs. In fact, it was the combination of a few AI assistants with a lot of
-                    trial and error that allowed me to progress and move forward. </p>
+                    trial and error that allowed me to progress and move forward. Once again proving the critical
+                    aspects of AI assistants these days within my own workflow.</p>
 
                 <h3>4. Base/level/inflight values via ConfigMaps and composed via FluxCD are incredibly practical</h3>
                 <p>Layered values provide sane defaults, environment overrides, and safe runtime tweaks while staying
@@ -348,8 +348,8 @@ autoscaling:
                 <h2>Conclusion</h2>
                 <p>The journey from a basic FluxCD setup to a sophisticated, multi-component GitOps implementation has
                     been both challenging and rewarding. The key to success, at least for now, was to combine the use of
-                    FluxCD with Kustomization on some specific aspects of my implementation. I'm still not
-                    sure if this is the best-of-all approach, but it's certainly working for now and working very well.
+                    FluxCD with Kustomization on some specific aspects of my implementation. I'm still not sure if this
+                    is the best-of-all approach, but it's certainly working for now and working very well.
                 </p>
 
                 <p>The current implementation provides several significant benefits:</p>
@@ -382,6 +382,9 @@ autoscaling:
                 <h3>2. Infrastructure as Code Integration</h3>
                 <p>Extend the GitOps approach to infrastructure components like cert-manager, Istio, Keycloak,
                     OAuth2-proxy, and other critical services that are currently managed outside the FluxCD workflow.
+                    Those components are currently installed by FluxCD, but I would like to extend the management of
+                    their configuration values as well, including the inter-relationships between them (e.g. Keycloak
+                    client ID and secret for OAuth2-proxy).
                 </p>
 
                 <p>I believe the foundation is now in place for a robust, scalable GitOps implementation that can grow
