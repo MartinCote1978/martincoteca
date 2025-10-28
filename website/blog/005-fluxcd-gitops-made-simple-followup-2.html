@@ -271,6 +271,34 @@ spec:
                     reliability.
                 </p>
 
+                <h3>FluxCD Install Pattern (Kustomize + Helm)</h3>
+                <p>To keep things simple and predictable, I split installs by purpose: Helm for upstream charts, and
+                    Kustomize for cluster-scoped or bespoke YAML. Everything reconciles through small, ordered Flux
+                    Kustomizations per environment.</p>
+
+                <pre><code># clusters/local/kustomization.yaml (excerpt)
+resources:
+  - flux-system/config-kustomization.yaml      # ConfigMaps first
+  - flux-system/infra-kustomization.yaml       # Platform charts (Istio, cert-manager, ...)
+  - flux-system/istio-base-kustomization.yaml  # Mesh-wide Istio config
+  - flux-system/istio-local-kustomization.yaml # Env-specific Istio overlay
+  - flux-system/cert-issuers-kustomization.yaml       # ClusterIssuers
+  - flux-system/cert-certificates-kustomization.yaml  # Ingress TLS certs
+  - flux-system/apps-kustomization.yaml        # Applications last</code></pre>
+
+                <p>Content lives in Git submodules to separate ownership and keep promotion explicit:</p>
+                <ul>
+                    <li>Istio base/overlays: <code>components/istio/{base,local,sandbox}</code></li>
+                    <li>Cert-manager issuers: <code>components/cert-manager/issuers/&lt;env&gt;</code></li>
+                    <li>Cert-manager certificates: <code>components/cert-manager/certificates/&lt;env&gt;</code></li>
+                    <li>App values (per chart): <code>components/&lt;app&gt;/*.values.yaml</code></li>
+                </ul>
+
+                <p>Ownership stays clear: the platform keeps Gateways, ClusterIssuers, and Certificates; applications
+                    ship their own <code>VirtualService</code> (and optional <code>DestinationRule</code>) in their
+                    Helm charts, referencing the shared gateway by name. The result is small, focused units with
+                    explicit <code>dependsOn</code> and health checks—easy to reason about and easy to automate.</p>
+
                 <h2>Specific Configuration Examples</h2>
                 <p>Here are some specific examples from my implementation that demonstrate the layered configuration
                     approach:</p>
@@ -344,6 +372,11 @@ autoscaling:
                     GitOps-friendly. The combination of the ConfigMap generation and the FluxCD HelmRelease valuesFrom
                     feature allowed me to achieve a very practical and effective solution but still very simple to
                     understand and maintain.</p>
+
+                <h3>5. Kustomization composition for YAML configuration</h3>
+                <p>Once setup initially, reusing the installation pattern with Kustomization loading the content of a
+                    folder, in other words executing a "kubectl apply" to that content, is fairly easy to understand.
+                </p>
 
                 <h2>Conclusion</h2>
                 <p>The journey from a basic FluxCD setup to a sophisticated, multi-component GitOps implementation has
