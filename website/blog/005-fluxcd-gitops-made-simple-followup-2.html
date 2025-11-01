@@ -60,7 +60,7 @@
 
                 <p>My current setup now uses <code>configMapGenerator</code> implementation that
                     automatically creates ConfigMaps from component-specific values files stored in Git submodules of my
-                    main FluxCD repository. Each of those Git submodules link to the their component-specific Git
+                    main FluxCD repository. Each of those Git submodules links to their component-specific Git
                     repositories, which are the actual repositories containing the component-specific values files. This
                     approach ensures that all configuration changes are version-controlled and follow GitOps principles,
                     while the <code>valuesFrom</code> feature in HelmRelease resources allows for layered configuration
@@ -85,7 +85,7 @@
                     I encountered several issues that threatened the reliability of my GitOps workflow:</p>
 
                 <h3>1. ConfigMap Changes were not being detected</h3>
-                <p>This was THE major issue, causing the system to not be able to trigger the deployment of the
+                <p>This was THE major issue, preventing the system from triggering the deployment of the
                     HelmRelease. It was properly working in some scenarios, but not in others.</p>
 
                 <h3>2. Kustomization Validation Errors</h3>
@@ -340,7 +340,7 @@ autoscaling:
                 <p>The suggested layout with explicit dependencies made the design suggestions and allowed me to adjust
                     the structure to my needs. In fact, it was the combination of a few AI assistants with a lot of
                     trial and error that allowed me to progress and move forward. Once again proving the critical
-                    aspects of AI assistants these days within my own workflow. Now, is it the perfact approach? I am
+                    aspects of AI assistants these days within my own workflow. Now, is it the perfect approach? I am
                     still learning and validating that aspects as I learn more.</p>
 
                 <h3>4. Base/level/inflight values via ConfigMaps and composed via FluxCD are incredibly practical</h3>
@@ -355,7 +355,7 @@ autoscaling:
                 </p>
 
                 <h2>Conclusion</h2>
-                <p>The journey from a basic FluxCD setup to a sophisticated, multi-components GitOps implementation has
+                <p>The journey from a basic FluxCD setup to a sophisticated, multi-component GitOps implementation has
                     been both challenging and rewarding. The key to success, at least for now, was to combine the use of
                     FluxCD with Kustomization on some specific aspects of my implementation. I'm still not sure if this
                     is the best-of-all approach, but it's certainly working for now and working very well for my needs.
