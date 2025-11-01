@@ -20,7 +20,7 @@
 
         <article>
             <header class="blog-header">
-                <div class="blog-date">October 30, 2025</div>
+                <div class="blog-date">November 2, 2025</div>
                 <h1 class="blog-title">FluxCD GitOps Made Simple: A Follow-up (bis)</h1>
                 <div class="tags">
                     <span class="tag">Kubernetes</span>
@@ -44,32 +44,21 @@
                         href="003-fluxcd-gitops-made-simple-followup.html">follow-up</a>, I documented my journey from
                     basic FluxCD setup to implementing a layered configuration approach using Git submodules and
                     ConfigMap generation. However, as I continued to scale and improve my GitOps implementation, I
-                    encountered significant challenges with Kustomization validation, ConfigMap dependency management,
+                    encountered a few challenges with Kustomization validation, ConfigMap dependency management,
                     and the complexity of maintaining multiple environment configurations while maximizing the
-                    automation I was targeting for. This post details the critical refinements I made to address these
-                    issues and achieve a more robust, automated, maintainable GitOps workflow.
+                    automation I was targeting for.
                 </p>
 
-                <p>Note, my personal objective with these tools is always the same: trying to maintain a basic
-                    implementation of each component in use, allowing for maximum flexibility and reusability while
-                    keeping the implementation simple and easy to understand. In other words, using the tools the proper
-                    way, as it was designed to be used! (or at least, try to do so)
+                <p>More precisely, the next evolution of my FluxCD setup was driven by the need to solve three core
+                    challenges I was facing: <strong>Kustomization validation errors</strong> that were preventing
+                    proper deployment (although at the time, it had limited effect on my deployment), <strong>ConfigMap
+                        dependency management</strong> that required careful orchestration between component updates and
+                    FluxCD reconciliation (which wasn't working properly in all cases), and <strong>monitoring and
+                        health checks</strong> to ensure the entire system remained in a consistent state (not fully
+                    achieved, but much better than before).
                 </p>
 
-                <p>
-                    The next evolution of my FluxCD setup was driven by the need to solve three core
-                    challenges I was facing:
-                    <strong>Kustomization validation errors</strong> that were preventing proper deployment (although at
-                    the time, it had limited effect on my deployment),
-                    <strong>ConfigMap dependency management</strong> that required careful orchestration between
-                    component updates and FluxCD reconciliation (which wasn't working properly in all cases), and
-                    <strong>monitoring and health checks</strong> to ensure the entire system remained in a consistent
-                    state (not fully achieved, but much better than before). Through this journey, I've learned that
-                    while Kustomization is powerful, it demands precise understanding of its validation rules and
-                    dependency chains, especially with the folder structure I was using.
-                </p>
-
-                <p>My current setup now features a sophisticated <code>configMapGenerator</code> implementation that
+                <p>My current setup now uses <code>configMapGenerator</code> implementation that
                     automatically creates ConfigMaps from component-specific values files stored in Git submodules of my
                     main FluxCD repository. Each of those Git submodules link to the their component-specific Git
                     repositories, which are the actual repositories containing the component-specific values files. This
@@ -85,21 +74,26 @@
                     requirements. I'll also share the monitoring strategies I've implemented to track ConfigMap updates
                     and ensure smooth deployments across both local and sandbox environments.</p>
 
+                <p>Note, my personal objective with these tools is always the same: trying to maintain a basic
+                    implementation of each component in use, allowing for maximum flexibility and reusability while
+                    keeping the implementation simple and easy to understand. In other words, using the tools the proper
+                    way, as it was designed to be used! (or at least, try to do so)
+                </p>
+
                 <h2>The Problem: Kustomization Validation and Dependency Chaos</h2>
                 <p>As my FluxCD implementation grew from a simple setup to a multi-component, multi-environment system,
-                    I encountered several critical issues that threatened the reliability of my GitOps workflow:</p>
+                    I encountered several issues that threatened the reliability of my GitOps workflow:</p>
 
                 <h3>1. ConfigMap Changes were not being detected</h3>
-                <p>This was THE major issue, as I was not able to detect when the ConfigMap changes were being made, and
-                    therefore, I was not able to trigger the deployment of the HelmRelease. It was properly working in
-                    some scenarios, but not in others.</p>
+                <p>This was THE major issue, causing the system to not be able to trigger the deployment of the
+                    HelmRelease. It was properly working in some scenarios, but not in others.</p>
 
                 <h3>2. Kustomization Validation Errors</h3>
                 <p>The most frustrating challenge was Kustomization's strict validation rules. When I initially tried to
                     include <code>configMapGenerator</code> directly in my main environment Kustomization files, I
                     encountered validation errors that prevented deployments. The error messages were often cryptic,
                     pointing to issues with file paths, namespace configurations, or resource references that weren't
-                    immediately obvious.</p>
+                    immediately obvious to me.</p>
 
                 <h3>3. ConfigMap Dependency Race Conditions</h3>
                 <p>Even when ConfigMaps were successfully generated, HelmReleases would sometimes attempt to deploy
@@ -107,10 +101,10 @@
                     where deployments would fail with "ConfigMap not found" errors, requiring manual intervention and
                     reconciliation.</p>
 
-                <h3>4. Lack of Visibility</h3>
+                <h3>4. Lack of Visibility between ConfigMap generation and HelmRelease deployment</h3>
                 <p>Without proper monitoring and health checks, it was difficult to determine whether ConfigMap
                     generation was successful or if dependencies were properly satisfied. This lack of visibility made
-                    troubleshooting deployments extremely challenging.</p>
+                    troubleshooting deployments challenging and a lot more unpredictable and unreliable.</p>
 
                 <h2>The Solution: Restructured Repository with Dedicated Config Management</h2>
                 <p>To address these challenges, I completely restructured my FluxCD repository to separate concerns and
@@ -147,9 +141,18 @@
 │   └── sandbox/                   # Sandbox environment (similar structure)
 └── README.md</code></pre>
 
+                <p>The folder structure is quite simple and straightforward, and it allows me to keep the configuration
+                    of each component in a separate Git repository, while still being able to use the same FluxCD
+                    repository for all the components. The main FluxCD configuration for a specific environment is
+                    located in the <code>clusters/local/flux-system/</code> directory for the local environment for
+                    example, triggering the kustomization of the ConfigMap generation at first and then the Apps and
+                    Infrastructure components via their HelmRelease definitions afterwards. The same goes for the
+                    sandbox environment, with the <code>clusters/sandbox/flux-system/</code> directory.
+                </p>
+
                 <h3>ConfigMap Generation Strategy</h3>
                 <p>The core of my solution is the dedicated ConfigMap generation in the <code>config/</code> directory.
-                    Here's how it works:</p>
+                    Here's how it works.</p>
 
                 <p><strong>Terminology:</strong> <em>base</em> = default values shared across environments;
                     <em>level</em> = environment-specific overrides (e.g., local, sandbox); <em>inflight</em> =
@@ -181,14 +184,15 @@ commonLabels:
                     appropriate values for the component, which is actually the component Git repository allowing the
                     developer of that particular component to maintain the content of those values files. First, the
                     base values are included and provide the common values for the component, then the "level" values
-                    are
-                    included and provide either the local environment values or the sandbox values for the component.
-                    After that, the values from the HelmRelease are included, and the values from the HelmRelease take
-                    precedence over the values from the ConfigMap. Those HelmRelease values are usually maintained by
-                    FluxCD itself, and are used to automatically update the image tags of the component.</p>
+                    are included and provide either the local environment values or the sandbox values for the
+                    component. After that, the values from the HelmRelease are included, and the values from the
+                    HelmRelease take precedence over the values from the ConfigMap. Those HelmRelease values are usually
+                    maintained by FluxCD itself, and are used to automatically update the image tags of the component
+                    for the most part.
+                </p>
 
                 <h3>Dependency Management with Health Checks</h3>
-                <p>An important breakthrough was implementing proper dependency management through FluxCD's
+                <p>An important item to get it right was implementing proper dependency management through FluxCD's
                     <code>dependsOn</code> feature combined with comprehensive health checks:
                 </p>
 
@@ -220,10 +224,10 @@ spec:
       namespace: default
     # ... health checks for all ConfigMaps</code></pre>
 
-                <p>This is the key to the whole solution, as it ensures that the ConfigMap is created before the
-                    application is deployed. Without this, the application would be deployed before the ConfigMap is
-                    created, and the application would fail to start. Before that, it would sometimes work and others
-                    fail (which I can't explain why at this point!)</p>
+                <p>This was key, as it ensures that the ConfigMap is created before the application is deployed. Without
+                    this, the application would be deployed before the ConfigMap is created in some cases, and the
+                    application would fail to start. Before that, it would sometimes work and others fail (which I can't
+                    explain why at this point!!)</p>
 
                 <h3>Apps Dependency on Config</h3>
                 <p>Applications are configured to depend on the ConfigMap generation, ensuring proper deployment order:
@@ -258,12 +262,10 @@ spec:
         optional: true
       # ... other ConfigMap references</code></pre>
 
-                <p>The dependency was working well but one trick required to have it all working was this
-                    "CONFIG_TIMESTAMP" variable substitution. This variable is used to track the timestamp of the
-                    ConfigMap generation, and is used to trigger the deployment of the application when the ConfigMap
-                    changes. This was critical to have it all working, as I was not able to detect when the ConfigMap
-                    changes were being made solely on the the values (i.e. no other changes than that), and therefore, I
-                    was not able to trigger the deployment of the HelmRelease.
+                <p>The dependency was working well, but one trick was required: the "CONFIG_TIMESTAMP" variable
+                    substitution. This forces Flux to detect ConfigMap changes after the initial creation when only
+                    the values files are updated, ensuring reliable reconciliation and triggering the HelmRelease
+                    deployments.
                 </p>
 
                 <p><em>Why:</em> Forces a detectable content change so Flux reconciles when only values update.
@@ -271,37 +273,9 @@ spec:
                     reliability.
                 </p>
 
-                <h3>FluxCD Install Pattern (Kustomize + Helm)</h3>
-                <p>To keep things simple and predictable, I split installs by purpose: Helm for upstream charts, and
-                    Kustomize for cluster-scoped or bespoke YAML. Everything reconciles through small, ordered Flux
-                    Kustomizations per environment.</p>
-
-                <pre><code># clusters/local/kustomization.yaml (excerpt)
-resources:
-  - flux-system/config-kustomization.yaml      # ConfigMaps first
-  - flux-system/infra-kustomization.yaml       # Platform charts (Istio, cert-manager, ...)
-  - flux-system/istio-base-kustomization.yaml  # Mesh-wide Istio config
-  - flux-system/istio-local-kustomization.yaml # Env-specific Istio overlay
-  - flux-system/cert-issuers-kustomization.yaml       # ClusterIssuers
-  - flux-system/cert-certificates-kustomization.yaml  # Ingress TLS certs
-  - flux-system/apps-kustomization.yaml        # Applications last</code></pre>
-
-                <p>Content lives in Git submodules to separate ownership and keep promotion explicit:</p>
-                <ul>
-                    <li>Istio base/overlays: <code>components/istio/{base,local,sandbox}</code></li>
-                    <li>Cert-manager issuers: <code>components/cert-manager/issuers/&lt;env&gt;</code></li>
-                    <li>Cert-manager certificates: <code>components/cert-manager/certificates/&lt;env&gt;</code></li>
-                    <li>App values (per chart): <code>components/&lt;app&gt;/*.values.yaml</code></li>
-                </ul>
-
-                <p>Ownership stays clear: the platform keeps Gateways, ClusterIssuers, and Certificates; applications
-                    ship their own <code>VirtualService</code> (and optional <code>DestinationRule</code>) in their
-                    Helm charts, referencing the shared gateway by name. The result is small, focused units with
-                    explicit <code>dependsOn</code> and health checks—easy to reason about and easy to automate.</p>
-
                 <h2>Specific Configuration Examples</h2>
                 <p>Here are some specific examples from my implementation that demonstrate the layered configuration
-                    approach:</p>
+                    approach and that will hopefully help you reproduce the same approach if you need to do so.</p>
 
                 <h3>Base Configuration (Common Across Environments)</h3>
                 <pre><code># clusters/components/static-website/base.values.yaml
@@ -333,7 +307,7 @@ autoscaling:
 
                 <pre><code># clusters/components/static-website/snbx.values.yaml (Sandbox)
 image:
-  repository: registry.gitlab.com/bouc-io/application/examples/static-website/static-web-example
+  repository: REPO_URL/static-web-example
   imagePullSecrets: "gitlab-registry-key"
 autoscaling:
   enabled: true</code></pre>
@@ -349,7 +323,7 @@ autoscaling:
 # ... other components</code></pre>
 
                 <h2>Key Lessons Learned</h2>
-                <p>Throughout this journey, I've learned several critical lessons about Kustomization and FluxCD,
+                <p>Throughout this journey, I've learned several lessons about Kustomization and FluxCD,
                     especially Kustomize as I improved my setup and my understanding of it:</p>
 
                 <h3>1. I'm still internalizing Kustomize's loading and composition model</h3>
@@ -358,14 +332,16 @@ autoscaling:
                     progress and move forward with the help of an AI assistant, and a lot of trial and error.</p>
 
                 <h3>2. Git submodules add friction, but clarify ownership</h3>
-                <p>Letting component owners ship their own values/config separates Dev and Ops cleanly—even with an
-                    extra sync step.</p>
+                <p>Letting component owners ship their own values/config separates Dev and Ops cleanly — even with an
+                    extra sync step. Depending on your specific teams setup, this might be undesirable or not required.
+                    However, in my case, it was preferred.</p>
 
                 <h3>3. AI assistants unlocked the apps/infra/config split</h3>
                 <p>The suggested layout with explicit dependencies made the design suggestions and allowed me to adjust
                     the structure to my needs. In fact, it was the combination of a few AI assistants with a lot of
                     trial and error that allowed me to progress and move forward. Once again proving the critical
-                    aspects of AI assistants these days within my own workflow.</p>
+                    aspects of AI assistants these days within my own workflow. Now, is it the perfact approach? I am
+                    still learning and validating that aspects as I learn more.</p>
 
                 <h3>4. Base/level/inflight values via ConfigMaps and composed via FluxCD are incredibly practical</h3>
                 <p>Layered values provide sane defaults, environment overrides, and safe runtime tweaks while staying
@@ -379,10 +355,10 @@ autoscaling:
                 </p>
 
                 <h2>Conclusion</h2>
-                <p>The journey from a basic FluxCD setup to a sophisticated, multi-component GitOps implementation has
+                <p>The journey from a basic FluxCD setup to a sophisticated, multi-components GitOps implementation has
                     been both challenging and rewarding. The key to success, at least for now, was to combine the use of
                     FluxCD with Kustomization on some specific aspects of my implementation. I'm still not sure if this
-                    is the best-of-all approach, but it's certainly working for now and working very well.
+                    is the best-of-all approach, but it's certainly working for now and working very well for my needs.
                 </p>
 
                 <p>The current implementation provides several significant benefits:</p>
@@ -417,7 +393,7 @@ autoscaling:
                     OAuth2-proxy, and other critical services that are currently managed outside the FluxCD workflow.
                     Those components are currently installed by FluxCD, but I would like to extend the management of
                     their configuration values as well, including the inter-relationships between them (e.g. Keycloak
-                    client ID and secret for OAuth2-proxy).
+                    client ID and secret required for OAuth2-proxy).
                 </p>
 
                 <p>I believe the foundation is now in place for a robust, scalable GitOps implementation that can grow
@@ -442,10 +418,10 @@ autoscaling:
                             Kustomize Helm Example</a> - Official example demonstrating Kustomize integration</li>
                 </ul>
 
-                <p><i>This blog post represents the culmination of months of experimentation and refinement in GitOps
-                        practices. I am hoping the lessons learned here should help others avoid similar challenges and
-                        build more robust Kubernetes deployment workflows. It is in no way the absolute, best-of-all
-                        approach but my personal experience with it.</i></p>
+                <p><i>This blog post represents the culmination of weeks and months of experimentation and refinement in
+                        GitOps practices. I am hoping the lessons learned here should help others avoid similar
+                        challenges and build more robust Kubernetes deployment workflows. It is in no way the absolute,
+                        best-of-all approach but my personal experience with it.</i></p>
 
             </div>
         </article>
