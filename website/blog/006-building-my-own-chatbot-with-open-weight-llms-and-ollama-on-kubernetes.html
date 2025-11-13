@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Building My Own Chatbot with Open-Weight LLMs and Ollama - Martin Cote</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+  <script src="../analytics.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="back-to-blogs">
+      <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+    </div>
+
+    <article>
+      <header class="blog-header">
+        <div class="blog-date">November 15, 2025</div>
+        <h1 class="blog-title">Building My Own Chatbot with Open-Weight LLMs and Ollama on my own Kubernetes cluster
+        </h1>
+        <div class="tags">
+          <span class="tag">Kubernetes</span>
+          <span class="tag">GCP</span>
+          <span class="tag">Ollama</span>
+          <span class="tag">LLM</span>
+          <span class="tag">React</span>
+          <span class="tag">Node.js</span>
+          <span class="tag">Keycloak</span>
+          <span class="tag">FluxCD</span>
+          <span class="tag">GitOps</span>
+          <span class="tag">Istio</span>
+        </div>
+      </header>
+
+      <div class="blog-content">
+        <h2>My own chatbot on my own Kubernetes cluster</h2>
+        <p>Over the past several months, I've embarked on a journey to build my own chatbot solution from the ground up,
+          leveraging open-weight large language models (LLMs) and a modern cloud-native stack. This project has been
+          both challenging and rewarding, teaching me valuable lessons about authentication, session management, GitOps
+          automation, and the complexities of deploying AI workloads on Kubernetes.</p>
+
+        <p>My chatbot solution integrates multiple open-weight models (Llama 3.2, Qwen3, and Mistral-Nemo)
+          through <strong>Ollama</strong>, a powerful tool for running LLMs locally or in containers. The entire stack
+          runs on <strong>Google Cloud Platform (GCP)</strong> using <strong>Google Kubernetes Engine (GKE)</strong>,
+          with infrastructure managed through <strong>Terraform</strong> and application deployments orchestrated via
+          <strong>FluxCD</strong> for true GitOps automation.
+        </p>
+
+        <h2>Overall Architecture and Setup</h2>
+
+        <h3>The Technology Stack</h3>
+        <p>The chatbot solution consists of several key components:</p>
+
+        <ul>
+          <li><strong>Frontend (React + Vite + shadcn-ui + Tailwind CSS + TypeScript)</strong>: A modern,
+            monochrome-themed chatbot UI built with React, Vite, shadcn-ui, and Tailwind CSS. The UI supports multiple
+            conversations, model selection, chat history management, and theme customization.</li>
+          <li><strong>Backend API (Node.js + Express.js + Prisma ORM + PostgreSQL)</strong>: A RESTful API server using
+            Express.js, Prisma ORM, and PostgreSQL for managing users, chats, messages, and model configurations.</li>
+          <li><strong>Ollama Service (Helm chart)</strong>: Deployed as a Helm chart on Kubernetes, Ollama serves as the
+            inference engine for multiple open-weight LLM models. Models are pre-loaded and managed through environment
+            variables and persistent volumes.</li>
+          <li><strong>Authentication Stack (Keycloak + OAuth2-proxy)</strong>: Keycloak provides identity and access
+            management, with OAuth2-proxy
+            handling session validation at the Istio gateway level.</li>
+          <li><strong>Service Mesh (Istio)</strong>: Istio manages ingress, mTLS, and traffic policies, integrating with
+            OAuth2-proxy for authentication at the edge.</li>
+          <li><strong>GitOps Automation (FluxCD)</strong>: FluxCD continuously reconciles the desired state from Git,
+            automatically deploying updates to the Kubernetes cluster.</li>
+        </ul>
+
+        <p><img src="./006-chatbot-architecture.jpg" alt="Chatbot Architecture" class="img-fluid"
+            style="width: 100%; height: auto;"></p>
+        <p>High-level architecture of the Bouc.io chatbot platform — everything runs inside a single Kubernetes cluster
+          with Istio-managed ingress, Keycloak-based authentication, and FluxCD-driven GitOps automation.</p>
+
+        <h3>Deployment Architecture</h3>
+        <p>The entire solution is deployed on Docker-Desktop locally or on GKE using a GitOps approach. The FluxCD
+          repository (<code>fluxcdboucio</code>) contains Helm releases for each component, with environment-specific
+          overlays for local development and sandbox environments. Key components include:</p>
+
+        <pre><code>clusters/
+├── base/           # Base configurations for both applications and infrastructure
+├── components/     # Git submodules for each component
+├── local/          # Local development environment
+└── sandbox/        # Sandbox environment on GCP
+
+components/
+├── chatbot-ui/     # React frontend Helm chart
+├── chatbot-api/    # Node.js backend API Helm chart
+├── ollama/         # Ollama LLM inference service
+├── keycloak/       # Identity provider
+├── oauth2-proxy/   # Authentication proxy
+├── istio/          # Service mesh configuration
+└── cert-manager/   # TLS certificate management</code></pre>
+
+        <p>Each component is versioned, containerized, and deployed through Helm charts stored in GitLab's container
+          registry. FluxCD's image automation controller watches for new image tags and automatically updates Helm
+          releases, ensuring deployments stay current with the latest builds.</p>
+
+        <h3>Model Management</h3>
+        <p>Ollama is configured to pull and run multiple models simultaneously. The available models are defined in the
+          chatbot UI's environment variables:</p>
+
+        <pre><code>VITE_AVAILABLE_MODELS:
+  - id: "llama3.2:1b"
+    name: "Llama 3.2"
+    description: "Fast and efficient model"
+  - id: "qwen3:0.6b"
+    name: "Qwen3"
+    description: "Latest generation of large language models"
+  - id: "mistral-nemo:12b"
+    name: "Mistral-Nemo"
+    description: "Built by Mistral AI in collaboration with NVIDIA"</code></pre>
+
+        <p>Users can switch between models dynamically through the UI, and the backend API tracks which model was used
+          for each conversation, enabling model-specific analytics and optimization.</p>
+
+        <h2>Challenges Encountered</h2>
+
+        <h3>Login and Session Management: The Biggest Hurdle</h3>
+        <p>One of the most significant challenges I faced was implementing the authentication and session management.
+          The integration between Keycloak, OAuth2-proxy, and the React frontend required careful orchestration of token
+          refresh, callback handling, and state management.</p>
+
+        <h4>Token Refresh Complexity</h4>
+        <p>Implementing automatic token refresh was particularly tricky. The Keycloak JavaScript adapter provides token
+          refresh capabilities, but coordinating this across React components, axios interceptors, and the
+          authentication store required careful state management. I implemented a centralized auth store that manages
+          token refresh logic:</p>
+
+        <pre><code>// Token refresh in axios interceptor
+axiosInstance.interceptors.response.use(
+  async (error) => {
+    if (error.response?.status === 401 && !error.config._retry) {
+      error.config._retry = true;
+      try {
+        const newTokens = await authStore.refreshUserToken();
+        if (newTokens?.access) {
+          error.config.headers["Authorization"] = `Bearer ${newTokens.access}`;
+          error.config.headers["x-auth-request-access-token"] = newTokens.access;
+          return axiosInstance(error.config);
+        }
+      } catch (refreshError) {
+        // Handle refresh failure - redirect to login
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);</code></pre>
+
+        <p>Tell me if I've done it right!</p>
+
+        <h4>PKCE Implementation</h4>
+        <p>Implementing PKCE (Proof Key for Code Exchange) for enhanced security added complexity. The Keycloak adapter
+          needed to be configured with the correct PKCE method (S256) and response mode (fragment). Debugging PKCE
+          issues required extensive logging and understanding of the OAuth2 flow.</p>
+
+        <h3>FluxCD Submodule Recursion</h3>
+        <p>FluxCD's bootstrap process removes recursive submodule configuration by default to avoid potential issues.
+          However, my setup relies on Git submodules to reference component-specific repositories. I had to manually
+          re-add the <code>recurseSubmodules: true</code> configuration after bootstrap, which wasn't immediately
+          obvious from the documentation for me and took me a while to figure out.</p>
+
+        <h3>Ollama Model Persistence</h3>
+        <p>Ensuring Ollama models persist across pod restarts required careful volume configuration. I had to configure
+          persistent volume claims (PVCs) with the correct access modes and ensure the Ollama data directory was
+          properly mounted. The community Helm chart for Ollama required specific environment variables for model
+          management.</p>
+
+        <h3>Istio and OAuth2-proxy Integration</h3>
+        <p>Configuring Istio's external authorization to work with OAuth2-proxy required understanding both systems'
+          authentication flows. The extension provider configuration needed to pass the correct headers upstream while
+          validating sessions at the gateway level.</p>
+
+        <h2>Key Lessons Learned</h2>
+
+        <h3>1. Authentication is Harder Than It Looks</h3>
+        <p>Building a production-ready authentication system requires deep understanding of OAuth2 flows, token
+          lifecycle management, and security best practices. The interaction between Keycloak, OAuth2-proxy, and the
+          frontend application requires careful coordination of state, callbacks, and error handling. This was
+          particularly challenging for me and remains so as I'm definitely not a security expert and had to learn a lot
+          about OAuth2 and security best practices.</p>
+
+        <h3>2. GitOps Simplifies Operations</h3>
+        <p>Adopting FluxCD for GitOps automation fundamentally changed how I manage deployments. Everything—from Helm
+          releases to image updates—is now declarative, version-controlled, and continuously reconciled by the cluster
+          itself. Instead of manually applying manifests or rebuilding environments, I simply commit changes to Git, and
+          Flux ensures that the running state matches the desired one.</p>
+        <p>The image automation workflow was especially powerful: whenever a new container image is built and pushed,
+          Flux automatically updates the corresponding HelmRelease, triggering a clean, auditable rollout. This
+          eliminated human error, made every deployment reproducible, and turned the cluster into a self-managing system
+          that enforces configuration consistency by design.</p>
+
+        <h3>3. Ollama and Open-Weight Models Are Production-Ready</h3>
+        <p>Open-weight models like Llama 3.2 and Qwen3 provide excellent performance for my chatbot use cases. Ollama
+          makes it straightforward to run multiple models simultaneously, allowing users to choose the best model for
+          their specific needs. The models run efficiently on standard Kubernetes nodes with GPU support.</p>
+
+        <h3>4. CORS and Token Propagation Are Subtler Than They Seem</h3>
+        <p>Because the frontend (app.bouc.io) and backend (api.bouc.io) run on separate hosts, I had to explicitly
+          manage every aspect of cross-origin access. The browser's CORS enforcement meant that the API had to expose
+          precise headers — Access-Control-Allow-Origin: app.bouc.io, Access-Control-Allow-Credentials: true, and
+          allowed HTTP verbs (GET, POST, PUT, PATCH, DELETE, OPTIONS) — to support preflight requests and session
+          cookies. Without these, authentication would silently fail before even reaching the backend.</p>
+        <p>The harder part was maintaining token continuity across Keycloak, OAuth2-proxy, and Istio. Once a user
+          authenticated, the __bouc_io cookie represented the session, while OAuth2-proxy validated it and injected the
+          x-auth-request-access-token header into Istio's ext-authz flow. This ensured that every call from the frontend
+          to api.bouc.io carried a valid JWT without reauthentication. It took time to align the browser's CORS model,
+          OAuth2 behavior, and Istio's security policies, but once configured, it provided seamless, end-to-end token
+          propagation through the entire mesh.</p>
+
+        <h3>5. Debugging Security Flows Requires Understanding the Entire Chain</h3>
+        <p>Troubleshooting authentication wasn't just about fixing one configuration—it required understanding how every
+          piece in the chain interacted. A login failure could originate from a browser CORS policy, a missing redirect
+          URI in Keycloak, an expired session in OAuth2-proxy, or a header not passed correctly through Istio's
+          ext-authz layer. Learning to trace these flows step by step—from token issuance to validation—became essential
+          to make the system stable.</p>
+        <p>What made this challenging was that most tools work perfectly in isolation but fail subtly when combined.
+          Keycloak expected OIDC semantics, Istio enforced mTLS and strict authorization, and the frontend obeyed
+          browser security rules that none of the backend services were aware of. Once I viewed these not as separate
+          problems but as one connected trust flow, I could reason through the behavior logically and make the
+          components cooperate.</p>
+
+        <h3>6. Testing in Production-Like Environments</h3>
+        <p>Having both a local (Docker Desktop) setup and a sandbox environment on GCP proved essential to developing
+          with confidence. The local cluster gave me the freedom to iterate quickly, rebuild containers, and experiment
+          with configuration changes without risk. The sandbox mirrored production-grade conditions—FluxCD GitOps
+          automation, Istio routing, Keycloak authentication, and persistent storage—all running in the same topology as
+          the real system.</p>
+        <p>This dual-environment workflow made every deployment reproducible. I could validate Helm charts, Flux
+          reconciliations, and Istio gateway rules exactly as they would behave in production before merging any change.
+          It turned testing from trial-and-error into a disciplined feedback loop that consistently revealed integration
+          issues early, when they were still easy to fix.</p>
+
+        <h2>The End Result: A Full-featured Chatbot app running on Kubernetes</h2>
+        <p>After months of development and iteration, the chatbot solution has evolved into a fully featured
+          application. The user interface provides a clean, monochrome-themed experience that supports
+          multiple authentication methods, dynamic model selection, and comprehensive user management. Below are
+          screenshots showcasing the key features and pages of the application.</p>
+
+        <h3>Authentication and Access</h3>
+        <p>The login page supports multiple authentication methods, including email/password and Google OAuth (although
+          removed / never fully implemented), providing users with flexible and secure access options.</p>
+        <p>
+          <img src="./006-chatbot-ui-login.jpg" alt="Chatbot UI - The login page, available with email or Google"
+            class="img-fluid" style="width: 100%; height: auto;">
+        </p>
+
+        <h3>Core Chat Experience</h3>
+        <p>The main chat interface allows users to select from multiple open-weight models, manage conversation history,
+          and interact with the AI through a clean, intuitive interface, heavily inspired by ChatGPT.</p>
+        <p>
+          <img src="./006-chatbot-ui.jpg" alt="Chatbot UI - The chat page, with model selection and chat history"
+            class="img-fluid" style="width: 100%; height: auto;">
+        </p>
+        <p>The chatbot supports advanced reasoning capabilities, as shown in this example conversation where the model
+          demonstrates step-by-step problem-solving, in this example leveraging Qwen3.</p>
+        <p>
+          <img src="./006-chatbot-ui-chat-reasoning.jpg" alt="Chatbot UI - A chat example, with reasoning"
+            class="img-fluid" style="width: 100%; height: auto;">
+        </p>
+
+        <h3>User Preferences and Management</h3>
+        <p>Users can customize their experience through the settings page, which includes theme selection and language
+          preferences (all implemented, thanks to an AI assistant).</p>
+        <p>
+          <img src="./006-chatbot-ui-settings.jpg"
+            alt="Chatbot UI - The settings page, with theme selection and language setting" class="img-fluid"
+            style="width: 100%; height: auto;">
+        </p>
+        <p>The account page provides users with access to their profile information and account management options.</p>
+        <p>
+          <img src="./006-chatbot-ui-account.jpg" alt="Chatbot UI - The account page, with user information"
+            class="img-fluid" style="width: 100%; height: auto;">
+        </p>
+        <p>For future monetization, the plan page is ready to display subscription information and pricing tiers.</p>
+        <p>
+          <img src="./006-chatbot-ui-plan.jpg" alt="Chatbot UI - The plan page, with subscription information"
+            class="img-fluid" style="width: 100%; height: auto;">
+        </p>
+
+        <h2>Conclusion</h2>
+        <p>Building this chatbot solution has been an incredible learning experience. The combination of open-weight
+          LLMs, modern cloud-native infrastructure, and GitOps automation creates a powerful, scalable platform for AI
+          applications. While the journey involved significant challenges—particularly around authentication and session
+          management—the end result is a production-ready system that demonstrates the maturity of open-source AI
+          tooling.</p>
+
+        <p>The solution showcases how modern DevOps practices (GitOps, Infrastructure as Code, containerization) can be
+          applied to AI workloads, making them as manageable and scalable as traditional web applications, and has
+          helped me learn a <strong>great deal</strong> about Kubernetes and its related technologies, GitOps and
+          FluxCD, AI, LLMs and how they all work together.</p>
+
+        <h2>Next Steps: Building My Own LLM</h2>
+        <p>Looking forward, I'm planning to build my own LLM from scratch, using the knowledge I've gained from this
+          project, focusing on both training and inference capabilities. I'm thinking to use <strong>nanoGPT</strong> as
+          a reference implementation, which seems to provide an excellent foundation for understanding transformer
+          architecture and training workflows.</p>
+
+        <p>Once I have a trained model, I plan to integrate it into the existing Ollama-based infrastructure.</p>
+
+        <p>The goal is to create a complete cycle: train a model, optimize it for inference, deploy it through the
+          existing GitOps pipeline, and continuously improve it... It won't be as good as the big guys, but it will be
+          a tremendous learning experience and it will be fun to build.</p>
+      </div>
+    </article>
+
+    <div class="d-flex justify-content-center vertical-spacing">
+      <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+        <i class="fab fa-github social-icon"></i>
+      </a>
+      <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+        <i class="fab fa-linkedin-in social-icon"></i>
+      </a>
+      <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+        <i class="fab fa-mastodon social-icon"></i>
+      </a>
+      <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+        <i class="fab fa-gitlab social-icon"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Image Modal Overlay -->
+  <div id="imageModal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <img class="image-modal-content" id="modalImage" alt="Expanded image">
+  </div>
+
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+  <script>
+    // Dynamically load the social links block
+    fetch('social-links.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('social-links').innerHTML = data;
+      });
+
+    // Image modal functionality
+    (function () {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      const closeBtn = document.querySelector('.image-modal-close');
+      const blogImages = document.querySelectorAll('.blog-content img');
+
+      // Open modal when clicking on an image
+      blogImages.forEach(function (img) {
+        img.addEventListener('click', function () {
+          modal.classList.add('active');
+          modalImg.src = this.src;
+          modalImg.alt = this.alt || 'Expanded image';
+          document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        });
+      });
+
+      // Close modal when clicking the close button
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          closeModal();
+        });
+      }
+
+      // Close modal when clicking outside the image
+      modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Close modal with Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+
+      function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+      }
+    })();
+  </script>
+</body>
+
+</html>

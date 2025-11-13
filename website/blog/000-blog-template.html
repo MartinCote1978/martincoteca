@@ -67,6 +67,12 @@ console.log(example);</code></pre>
         </div>
     </div>
 
+    <!-- Image Modal Overlay -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close">&times;</span>
+        <img class="image-modal-content" id="modalImage" alt="Expanded image">
+    </div>
+
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
     <script>
         // Dynamically load the social links block
@@ -75,6 +81,50 @@ console.log(example);</code></pre>
             .then(data => {
                 document.getElementById('social-links').innerHTML = data;
             });
+
+        // Image modal functionality
+        (function () {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.image-modal-close');
+            const blogImages = document.querySelectorAll('.blog-content img');
+
+            // Open modal when clicking on an image
+            blogImages.forEach(function (img) {
+                img.addEventListener('click', function () {
+                    modal.classList.add('active');
+                    modalImg.src = this.src;
+                    modalImg.alt = this.alt || 'Expanded image';
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                });
+            });
+
+            // Close modal when clicking the close button
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    closeModal();
+                });
+            }
+
+            // Close modal when clicking outside the image
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        })();
     </script>
 </body>
 

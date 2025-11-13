@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Automating Keycloak Installation on Kubernetes with FluxCD - Martin Cote</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+    <script src="../analytics.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">December 26, 2025</div>
+                <h1 class="blog-title">Automating Keycloak Installation on Kubernetes with FluxCD</h1>
+                <div class="tags">
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">Keycloak</span>
+                    <span class="tag">FluxCD</span>
+                    <span class="tag">Kustomization</span>
+                    <span class="tag">GitOps</span>
+                    <span class="tag">OAuth2</span>
+                    <span class="tag">DevOps</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+                <h2>Introduction</h2>
+                <p>After successfully implementing FluxCD to automate the installation and management of various
+                    components across my Kubernetes clusters (both local Docker Desktop and sandbox GKE environments), I
+                    was left with one significant challenge: fully automating Keycloak and its entire initialization
+                    process. What initially seemed like a straightforward Helm chart deployment turned into a journey of
+                    discovery, troubleshooting, and iterative improvements. This blog post documents my experience, the
+                    problems encountered, and the solutions that eventually emerged.</p>
+
+                <h2>Overall Setup Description</h2>
+                <p>The goal was to deploy Keycloak on Kubernetes using the Bitnami Keycloak Helm chart, managed entirely
+                    through FluxCD GitOps practices. The setup needed to work seamlessly across two environments:</p>
+
+                <ul>
+                    <li><strong>Local Environment:</strong> Docker Desktop Kubernetes cluster, accessible at
+                        <code>sso.docker.internal</code>
+                    </li>
+                    <li><strong>Sandbox Environment:</strong> GKE cluster on Google Cloud Platform, accessible at
+                        <code>sso.bouc.io</code>
+                    </li>
+                </ul>
+
+                <p>The architecture leverages:</p>
+                <ul>
+                    <li><strong>Bitnami Keycloak Helm Chart</strong> - Deployed via FluxCD HelmRelease resources</li>
+                    <li><strong>Keycloak Config CLI</strong> - An init container job that automatically imports realm
+                        configurations on startup</li>
+                    <li><strong>PostgreSQL Database</strong> - Embedded for local, external for sandbox</li>
+                    <li><strong>Istio Service Mesh</strong> - For ingress and networking configuration</li>
+                    <li><strong>OAuth2-proxy Integration</strong> - Requires the Keycloak client secret to function</li>
+                </ul>
+
+                <p>The FluxCD setup uses a modular approach with base values and environment-specific overrides (local
+                    vs. sandbox), stored as ConfigMaps generated from YAML files using Kustomize. The Keycloak realm
+                    configuration (the "users" realm) is stored as a JSON file in a separate ConfigMap, which the
+                    Keycloak Config CLI automatically imports during the Keycloak initialization process.</p>
+
+                <h2>Problems Encountered</h2>
+                <p>While the overall setup might sound straightforward, two major challenges required significant
+                    iteration and problem-solving:</p>
+
+                <h3>Problem 1: Automating OAuth2-proxy Client Secret Sharing</h3>
+                <p>The first critical issue was creating and sharing the OAuth2-proxy client secret between Keycloak and
+                    the OAuth2-proxy installation. In a fully automated GitOps workflow, you can't manually log into
+                    Keycloak's admin console to copy a client secret. The OAuth2-proxy Helm chart expects this secret to
+                    exist before it can start properly.</p>
+
+                <p>The solution involved creating a post-install Helm hook job that:</p>
+                <ol>
+                    <li>Waits for Keycloak to be fully operational and the "users" realm to be imported</li>
+                    <li>Uses the Keycloak Admin CLI (<code>kcadm.sh</code>) to authenticate to the Keycloak instance
+                    </li>
+                    <li>Retrieves or regenerates the client secret for the "oauth2-proxy" client</li>
+                    <li>Creates Kubernetes Secrets in both the <code>keycloak</code> and <code>oauth2-proxy</code>
+                        namespaces</li>
+                </ol>
+
+                <p>Here's a simplified version of the job that handles this:</p>
+                <pre><code>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-oauthproxy-sync
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "15"
+spec:
+  template:
+    spec:
+      containers:
+      - name: fetch-secret
+        image: docker.io/bitnamilegacy/keycloak:26.3.2
+        command:
+          - /bin/bash
+          - -c
+          - |
+            KCADM=/opt/bitnami/keycloak/bin/kcadm.sh
+            ${KCADM} config credentials \
+              --server "${KC_SERVER_URL}" \
+              --realm "${KC_ADMIN_REALM}" \
+              --user "${KC_USER}" \
+              --password "${KC_PASSWORD}"
+            
+            # Get or create client secret
+            CLIENT_ID=$(${KCADM} get clients -r "${KC_REALM}" \
+              -q clientId="oauth2-proxy" --fields id)
+            SECRET_JSON=$(${KCADM} get clients/${CLIENT_ID}/client-secret \
+              -r "${KC_REALM}" || \
+              ${KCADM} create clients/${CLIENT_ID}/client-secret -r "${KC_REALM}")
+            
+            # Extract secret value and create Kubernetes Secret
+            SECRET_VALUE=$(echo "${SECRET_JSON}" | jq -r '.value')
+            kubectl create secret generic oauthproxy-client-secret \
+              --from-literal=client-secret="${SECRET_VALUE}" \
+              --namespace oauth2-proxy</code></pre>
+
+                <p>This required multiple iterations to handle edge cases: what if the client doesn't exist yet? What if
+                    the secret hasn't been generated? What if Keycloak isn't fully ready? The final implementation
+                    includes retry logic and handles both fetch and regeneration scenarios.</p>
+
+                <h3>Problem 2: Loading the "Users" Realm Properly</h3>
+                <p>The second major challenge was getting the "users" realm to load correctly via the Keycloak Config
+                    CLI. The realm export from Keycloak's admin console includes a lot of metadata and internal IDs that
+                    can cause import failures, especially when dealing with version mismatches or incomplete exports.
+                </p>
+
+                <p>I went through <strong>eleven iterations</strong> of realm export files (version-1.json through
+                    version-11.json) as I discovered various issues:</p>
+                <ul>
+                    <li><strong>Version Compatibility:</strong> Different Keycloak versions export realms with slightly
+                        different schemas. The export needed to match the target Keycloak version.</li>
+                    <li><strong>Internal IDs:</strong> Some fields in the export contained internal Keycloak IDs that
+                        shouldn't be imported, causing conflicts.</li>
+                    <li><strong>Client Secret Handling:</strong> The realm export shouldn't include pre-generated client
+                        secrets, as these need to be managed separately (see Problem 1).</li>
+                    <li><strong>Missing Dependencies:</strong> The export had to include all necessary components in the
+                        correct order: realms, clients, roles, identity providers, etc.</li>
+                </ul>
+
+                <p>The solution involved several key configuration elements:</p>
+                <ol>
+                    <li><strong>ConfigMap Creation:</strong> The realm JSON file is packaged into a ConfigMap via
+                        Kustomize's configMapGenerator, which ensures it's available as a volume mount for the Keycloak
+                        Config CLI job.</li>
+                    <li><strong>Keycloak Config CLI Configuration:</strong> The Bitnami chart's
+                        <code>keycloakConfigCli</code> section is configured to reference the ConfigMap:
+                    </li>
+                </ol>
+
+                <pre><code>keycloakConfigCli:
+  existingConfigmap: "keycloak-users-realm"
+  hostAliases:
+    - ip: 10.104.152.226  # Istio ingress gateway IP
+      hostnames:
+        - sso.docker.internal
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+  extraEnvVars:
+    - name: KEYCLOAK_URL
+      value: https://sso.docker.internal
+    - name: KEYCLOAK_SSL_VERIFY
+      value: "false"</code></pre>
+
+                <p>The <code>hostAliases</code> configuration was particularly important - the Keycloak Config CLI job
+                    needed to be able to reach Keycloak via its external hostname, even though it was running inside the
+                    cluster. Without this, SSL certificate validation and hostname matching would fail.</p>
+
+                <p>Additionally, disabling Istio sidecar injection for the Config CLI job was necessary because the
+                    sidecar was interfering with the job's execution and network connectivity.</p>
+
+                <h2>Key Lessons Learned</h2>
+                <p>Through this journey, several important lessons emerged:</p>
+
+                <ul>
+                    <li><strong>Helm Hooks are Powerful but Tricky:</strong> The post-install hook for secret
+                        synchronization needed careful timing. The hook weight (<code>helm.sh/hook-weight: "15"</code>)
+                        ensures it runs after the Keycloak Config CLI job completes, but before OAuth2-proxy tries to
+                        start. Getting this sequence right required understanding Helm's hook execution order.</li>
+
+                    <li><strong>Network Configuration Matters:</strong> The <code>hostAliases</code> configuration was
+                        not immediately obvious but proved critical. When running inside Kubernetes with Istio,
+                        service-to-service communication might work fine, but applications that validate hostnames or
+                        SSL certificates need to reach services via their external endpoints.</li>
+
+                    <li><strong>Secrets Management in GitOps is Complex:</strong> While the solution works, managing
+                        secrets through Helm hooks and Kubernetes Jobs is not ideal. The current approach involves
+                        hardcoded admin credentials in the values files (noted with TODO comments) and secrets generated
+                        at runtime. This is a security concern that needs addressing.</li>
+                </ul>
+
+                <h2>Conclusion</h2>
+                <p>Automating Keycloak installation with FluxCD was more challenging than initially anticipated, but the
+                    end result provides a fully automated, GitOps-driven identity provider setup. The solution combines:
+                </p>
+                <ul>
+                    <li>Bitnami's Keycloak Helm chart for the base deployment</li>
+                    <li>Keycloak Config CLI for automated realm import</li>
+                    <li>Custom Helm hooks for secret synchronization</li>
+                    <li>Kustomize for environment-specific configuration management</li>
+                </ul>
+
+                <p>The iterative process, while time-consuming, resulted in a robust, repeatable deployment that works
+                    consistently across both local and sandbox environments. The setup now supports the entire
+                    authentication flow from Keycloak through OAuth2-proxy to the applications, all managed through Git
+                    commits and FluxCD reconciliation.</p>
+
+                <h2>Next Steps</h2>
+                <p>While the current solution works, there's one significant area that needs improvement:
+                    <strong>secrets management</strong>.
+                </p>
+
+                <p>The current approach has several limitations:</p>
+                <ul>
+                    <li>Admin credentials are stored in plain text in Helm values files</li>
+                    <li>Secrets are generated and stored directly in Kubernetes without encryption at rest (beyond what
+                        Kubernetes provides)</li>
+                    <li>There's no rotation mechanism for client secrets or admin passwords</li>
+                    <li>Secret synchronization relies on custom scripts rather than a declarative approach</li>
+                </ul>
+
+                <p>The next major improvement will be to integrate a proper secrets management solution, such as
+                    <strong>HashiCorp Vault</strong> or <strong>Sealed Secrets</strong>, to handle:
+                </p>
+                <ul>
+                    <li>Encrypted storage of sensitive configuration</li>
+                    <li>Automatic secret rotation</li>
+                    <li>Better integration with FluxCD through external secrets operator</li>
+                    <li>Audit trails and access control for secret management</li>
+                </ul>
+
+                <p>This will move the setup from "functional but not ideal" to "production-ready" in terms of security
+                    best practices. The current implementation serves as a solid foundation, but secrets management is
+                    the critical missing piece for a truly enterprise-grade solution.</p>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script>
+        // Dynamically load the social links block
+        fetch('social-links.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('social-links').innerHTML = data;
+            });
+    </script>
+</body>
+
+</html>
