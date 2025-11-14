@@ -68,21 +68,26 @@
           <li><strong>Authentication Stack (Keycloak + OAuth2-proxy)</strong>: Keycloak provides identity and access
             management, with OAuth2-proxy
             handling session validation at the Istio gateway level.</li>
-          <li><strong>Service Mesh (Istio)</strong>: Istio manages ingress, mTLS, and traffic policies, integrating with
-            OAuth2-proxy for authentication at the edge.</li>
+          <li><strong>Service Mesh (Istio + External-DNS + Cert-Manager)</strong>: Istio manages ingress, mTLS, and
+            traffic policies, integrating with OAuth2-proxy for authentication at the edge, External-DNS for DNS
+            management, and Cert-Manager for TLS certificates.</li>
           <li><strong>GitOps Automation (FluxCD)</strong>: FluxCD continuously reconciles the desired state from Git,
             automatically deploying updates to the Kubernetes cluster.</li>
         </ul>
 
-        <p><img src="./006-chatbot-architecture.jpg" alt="Chatbot Architecture" class="img-fluid"
-            style="width: 100%; height: auto;"></p>
-        <p>High-level architecture of the Bouc.io chatbot platform — everything runs inside a single Kubernetes cluster
-          with Istio-managed ingress, Keycloak-based authentication, and FluxCD-driven GitOps automation.</p>
+        <figure class="text-center">
+          <img src="./006-chatbot-architecture.jpg" alt="Chatbot Architecture" class="img-fluid"
+            style="width: 60%; height: auto;">
+          <figcaption>High-level architecture of the Bouc.io chatbot platform — everything runs inside a single
+            Kubernetes cluster
+            with Istio-managed ingress, Keycloak-based authentication, and FluxCD-driven GitOps automation.</figcaption>
+        </figure>
 
         <h3>Deployment Architecture</h3>
-        <p>The entire solution is deployed on Docker-Desktop locally or on GKE using a GitOps approach. The FluxCD
-          repository (<code>fluxcdboucio</code>) contains Helm releases for each component, with environment-specific
-          overlays for local development and sandbox environments. Key components include:</p>
+        <p>The entire solution is deployed on Docker-Desktop locally or on GKE using a GitOps approach. The FluxCD Git
+          repository contains Helm releases, Helm repositories, Image Policies & Image Automation (where necessary) and
+          Kustomize configurations for each component, with environment-specific overlays for local development and
+          sandbox environments. Key components include:</p>
 
         <pre><code>clusters/
 ├── base/           # Base configurations for both applications and infrastructure
@@ -105,7 +110,7 @@ components/
 
         <h3>Model Management</h3>
         <p>Ollama is configured to pull and run multiple models simultaneously. The available models are defined in the
-          chatbot UI's environment variables:</p>
+          chatbot UI's environment variables as well as in the Ollama environment variables, for example:</p>
 
         <pre><code>VITE_AVAILABLE_MODELS:
   - id: "llama3.2:1b"
@@ -121,14 +126,15 @@ components/
         <p>Users can switch between models dynamically through the UI, and the backend API tracks which model was used
           for each conversation, enabling model-specific analytics and optimization.</p>
 
-        <h2>Challenges Encountered</h2>
+        <h2>Key Challenges and Lessons Learned</h2>
 
-        <h3>Login and Session Management: The Biggest Hurdle</h3>
-        <p>One of the most significant challenges I faced was implementing the authentication and session management.
+        <h3>1. Authentication and Session Management: The Biggest Hurdle</h3>
+        <p>One of the most significant challenges I faced was implementing authentication and session management.
           The integration between Keycloak, OAuth2-proxy, and the React frontend required careful orchestration of token
-          refresh, callback handling, and state management.</p>
+          refresh, callback handling, and state management. Something I was not familiar with and had to learn a lot
+          about.</p>
 
-        <h4>Token Refresh Complexity</h4>
+        <h4>The Challenge: Token Refresh and PKCE</h4>
         <p>Implementing automatic token refresh was particularly tricky. The Keycloak JavaScript adapter provides token
           refresh capabilities, but coordinating this across React components, axios interceptors, and the
           authentication store required careful state management. I implemented a centralized auth store that manages
@@ -155,59 +161,15 @@ axiosInstance.interceptors.response.use(
   }
 );</code></pre>
 
-        <p>Tell me if I've done it right!</p>
+        <p>Implementing PKCE (Proof Key for Code Exchange) for enhanced security added further complexity. The Keycloak
+          adapter needed to be configured with the correct PKCE method (S256) and response mode (fragment). Debugging
+          PKCE issues required extensive logging and understanding of the OAuth2 flow.</p>
 
-        <h4>PKCE Implementation</h4>
-        <p>Implementing PKCE (Proof Key for Code Exchange) for enhanced security added complexity. The Keycloak adapter
-          needed to be configured with the correct PKCE method (S256) and response mode (fragment). Debugging PKCE
-          issues required extensive logging and understanding of the OAuth2 flow.</p>
-
-        <h3>FluxCD Submodule Recursion</h3>
-        <p>FluxCD's bootstrap process removes recursive submodule configuration by default to avoid potential issues.
-          However, my setup relies on Git submodules to reference component-specific repositories. I had to manually
-          re-add the <code>recurseSubmodules: true</code> configuration after bootstrap, which wasn't immediately
-          obvious from the documentation for me and took me a while to figure out.</p>
-
-        <h3>Ollama Model Persistence</h3>
-        <p>Ensuring Ollama models persist across pod restarts required careful volume configuration. I had to configure
-          persistent volume claims (PVCs) with the correct access modes and ensure the Ollama data directory was
-          properly mounted. The community Helm chart for Ollama required specific environment variables for model
-          management.</p>
-
-        <h3>Istio and OAuth2-proxy Integration</h3>
-        <p>Configuring Istio's external authorization to work with OAuth2-proxy required understanding both systems'
-          authentication flows. The extension provider configuration needed to pass the correct headers upstream while
-          validating sessions at the gateway level.</p>
-
-        <h2>Key Lessons Learned</h2>
-
-        <h3>1. Authentication is Harder Than It Looks</h3>
-        <p>Building a production-ready authentication system requires deep understanding of OAuth2 flows, token
-          lifecycle management, and security best practices. The interaction between Keycloak, OAuth2-proxy, and the
-          frontend application requires careful coordination of state, callbacks, and error handling. This was
-          particularly challenging for me and remains so as I'm definitely not a security expert and had to learn a lot
-          about OAuth2 and security best practices.</p>
-
-        <h3>2. GitOps Simplifies Operations</h3>
-        <p>Adopting FluxCD for GitOps automation fundamentally changed how I manage deployments. Everything—from Helm
-          releases to image updates—is now declarative, version-controlled, and continuously reconciled by the cluster
-          itself. Instead of manually applying manifests or rebuilding environments, I simply commit changes to Git, and
-          Flux ensures that the running state matches the desired one.</p>
-        <p>The image automation workflow was especially powerful: whenever a new container image is built and pushed,
-          Flux automatically updates the corresponding HelmRelease, triggering a clean, auditable rollout. This
-          eliminated human error, made every deployment reproducible, and turned the cluster into a self-managing system
-          that enforces configuration consistency by design.</p>
-
-        <h3>3. Ollama and Open-Weight Models Are Production-Ready</h3>
-        <p>Open-weight models like Llama 3.2 and Qwen3 provide excellent performance for my chatbot use cases. Ollama
-          makes it straightforward to run multiple models simultaneously, allowing users to choose the best model for
-          their specific needs. The models run efficiently on standard Kubernetes nodes with GPU support.</p>
-
-        <h3>4. CORS and Token Propagation Are Subtler Than They Seem</h3>
+        <h4>The Challenge: CORS and Cross-Origin Token Propagation</h4>
         <p>Because the frontend (app.bouc.io) and backend (api.bouc.io) run on separate hosts, I had to explicitly
           manage every aspect of cross-origin access. The browser's CORS enforcement meant that the API had to expose
-          precise headers — Access-Control-Allow-Origin: app.bouc.io, Access-Control-Allow-Credentials: true, and
-          allowed HTTP verbs (GET, POST, PUT, PATCH, DELETE, OPTIONS) — to support preflight requests and session
+          precise headers — in my case Access-Control-Allow-Origin: app.bouc.io, Access-Control-Allow-Credentials: true,
+          and allowed HTTP verbs (GET, POST, PUT, PATCH, DELETE, OPTIONS) — to support preflight requests and session
           cookies. Without these, authentication would silently fail before even reaching the backend.</p>
         <p>The harder part was maintaining token continuity across Keycloak, OAuth2-proxy, and Istio. Once a user
           authenticated, the __bouc_io cookie represented the session, while OAuth2-proxy validated it and injected the
@@ -216,7 +178,17 @@ axiosInstance.interceptors.response.use(
           OAuth2 behavior, and Istio's security policies, but once configured, it provided seamless, end-to-end token
           propagation through the entire mesh.</p>
 
-        <h3>5. Debugging Security Flows Requires Understanding the Entire Chain</h3>
+        <h4>The Challenge: Service Mesh Integration</h4>
+        <p>Configuring Istio's external authorization to work with OAuth2-proxy required understanding both systems'
+          authentication flows. The extension provider configuration needed to pass the correct headers upstream while
+          validating sessions at the gateway level.</p>
+
+        <h4>What I Learned</h4>
+        <p>Building a good authentication system requires deep understanding of OAuth2 flows, token
+          lifecycle management, and security best practices. The interaction between Keycloak, OAuth2-proxy, and the
+          frontend application requires careful coordination of state, callbacks, and error handling. This was
+          particularly challenging for me and remains so as I'm definitely not a security expert and had to learn a lot
+          about OAuth2 and security best practices.</p>
         <p>Troubleshooting authentication wasn't just about fixing one configuration—it required understanding how every
           piece in the chain interacted. A login failure could originate from a browser CORS policy, a missing redirect
           URI in Keycloak, an expired session in OAuth2-proxy, or a header not passed correctly through Istio's
@@ -228,7 +200,22 @@ axiosInstance.interceptors.response.use(
           problems but as one connected trust flow, I could reason through the behavior logically and make the
           components cooperate.</p>
 
-        <h3>6. Testing in Production-Like Environments</h3>
+        <h3>2. GitOps and Infrastructure Automation</h3>
+        <h4>The Challenge: FluxCD Submodule Recursion</h4>
+        <p>FluxCD's bootstrap process removes recursive submodule configuration by default to avoid potential issues.
+          However, my setup relies on Git submodules to reference component-specific repositories. I had to manually
+          re-add the <code>recurseSubmodules: true</code> configuration after bootstrap, which wasn't immediately
+          obvious from the documentation for me and took me a while to figure out.</p>
+
+        <h4>What I Learned</h4>
+        <p>Adopting FluxCD for GitOps automation fundamentally changed how I manage deployments. Everything—from Helm
+          releases to image updates—is now declarative, version-controlled, and continuously reconciled by the cluster
+          itself. Instead of manually applying manifests or rebuilding environments, I simply commit changes to Git, and
+          Flux ensures that the running state matches the desired one.</p>
+        <p>The image automation workflow was especially powerful: whenever a new container image is built and pushed,
+          Flux automatically updates the corresponding HelmRelease, triggering a clean, auditable rollout. This
+          eliminated human error, made every deployment reproducible, and turned the cluster into a self-managing system
+          that enforces configuration consistency by design.</p>
         <p>Having both a local (Docker Desktop) setup and a sandbox environment on GCP proved essential to developing
           with confidence. The local cluster gave me the freedom to iterate quickly, rebuild containers, and experiment
           with configuration changes without risk. The sandbox mirrored production-grade conditions—FluxCD GitOps
@@ -238,6 +225,18 @@ axiosInstance.interceptors.response.use(
           reconciliations, and Istio gateway rules exactly as they would behave in production before merging any change.
           It turned testing from trial-and-error into a disciplined feedback loop that consistently revealed integration
           issues early, when they were still easy to fix.</p>
+
+        <h3>3. AI Workload Management</h3>
+        <h4>The Challenge: Ollama Model Persistence</h4>
+        <p>Ensuring Ollama models persist across pod restarts required careful volume configuration. I had to configure
+          persistent volume claims (PVCs) with the correct access modes and ensure the Ollama data directory was
+          properly mounted. This was particular challenging on the Google Cloud Platform with GKE. The community Helm
+          chart for Ollama required specific environment variables for model management.</p>
+
+        <h4>What I Learned</h4>
+        <p>Open-weight models like Llama 3.2 and Qwen3 provide excellent performance for my chatbot use cases. Ollama
+          makes it straightforward to run multiple models simultaneously, allowing users to choose the best model for
+          their specific needs. The models run efficiently on standard Kubernetes nodes with GPU support.</p>
 
         <h2>The End Result: A Full-featured Chatbot app running on Kubernetes</h2>
         <p>After months of development and iteration, the chatbot solution has evolved into a fully featured
@@ -260,8 +259,9 @@ axiosInstance.interceptors.response.use(
           <img src="./006-chatbot-ui.jpg" alt="Chatbot UI - The chat page, with model selection and chat history"
             class="img-fluid" style="width: 100%; height: auto;">
         </p>
-        <p>The chatbot supports advanced reasoning capabilities, as shown in this example conversation where the model
-          demonstrates step-by-step problem-solving, in this example leveraging Qwen3.</p>
+        <p>The chatbot supports advanced reasoning capabilities, in this example leveraging Qwen3, as shown in this
+          example conversation where the model demonstrates step-by-step problem-solving for a very hard problem:
+          answering "hi"!</p>
         <p>
           <img src="./006-chatbot-ui-chat-reasoning.jpg" alt="Chatbot UI - A chat example, with reasoning"
             class="img-fluid" style="width: 100%; height: auto;">
