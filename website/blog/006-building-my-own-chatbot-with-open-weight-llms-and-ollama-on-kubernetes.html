@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Building My Own Chatbot with Open-Weight LLMs and Ollama - Martin Cote</title>
+  <title>Building My Own Chatbot with Open-Weight LLMs and Ollama on my own Kubernetes cluster - Martin Cote</title>
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../style.css">
@@ -38,17 +38,20 @@
       </header>
 
       <div class="blog-content">
-        <h2>My own chatbot on my own Kubernetes cluster</h2>
-        <p>Over the past several months, I've embarked on a journey to build my own chatbot solution from the ground up,
+        <h2>My own chatbot on my own Kubernetes cluster...</h2>
+        <p>Over the past several months, I've embarked on a journey to build my own chatbot solution on my provious
+          project,
           leveraging open-weight large language models (LLMs) and a modern cloud-native stack. This project has been
           both challenging and rewarding, teaching me valuable lessons about authentication, session management, GitOps
           automation, and the complexities of deploying AI workloads on Kubernetes.</p>
 
         <p>My chatbot solution integrates multiple open-weight models (Llama 3.2, Qwen3, and Mistral-Nemo)
-          through <strong>Ollama</strong>, a powerful tool for running LLMs locally or in containers. The entire stack
-          runs on <strong>Google Cloud Platform (GCP)</strong> using <strong>Google Kubernetes Engine (GKE)</strong>,
-          with infrastructure managed through <strong>Terraform</strong> and application deployments orchestrated via
-          <strong>FluxCD</strong> for true GitOps automation.
+          through <strong><a href="https://ollama.com" target="_blank">Ollama</a></strong>, a very great open source
+          tool for running LLMs locally or in containers. The
+          entire stack runs locally or on <strong>Google Cloud Platform (GCP)</strong> using <strong>Google Kubernetes
+            Engine (GKE)</strong>, with infrastructure managed through <strong>Terraform</strong> and application
+          deployments orchestrated via <strong><a href="https://fluxcd.io" target="_blank">FluxCD</a></strong> for true
+          GitOps automation.
         </p>
 
         <h2>Overall Architecture and Setup</h2>
@@ -60,34 +63,37 @@
           <li><strong>Frontend (React + Vite + shadcn-ui + Tailwind CSS + TypeScript)</strong>: A modern,
             monochrome-themed chatbot UI built with React, Vite, shadcn-ui, and Tailwind CSS. The UI supports multiple
             conversations, model selection, chat history management, and theme customization.</li>
-          <li><strong>Backend API (Node.js + Express.js + Prisma ORM + PostgreSQL)</strong>: A RESTful API server using
-            Express.js, Prisma ORM, and PostgreSQL for managing users, chats, messages, and model configurations.</li>
-          <li><strong>Ollama Service (Helm chart)</strong>: Deployed as a Helm chart on Kubernetes, Ollama serves as the
-            inference engine for multiple open-weight LLM models. Models are pre-loaded and managed through environment
-            variables and persistent volumes.</li>
-          <li><strong>Authentication Stack (Keycloak + OAuth2-proxy)</strong>: Keycloak provides identity and access
-            management, with OAuth2-proxy
-            handling session validation at the Istio gateway level.</li>
-          <li><strong>Service Mesh (Istio + External-DNS + Cert-Manager)</strong>: Istio manages ingress, mTLS, and
+          <li><strong>Backend API (Node.js + Express.js + Prisma + PostgreSQL)</strong>: A RESTful API server built on
+            Node.js using Express.js, Prisma ORM, and PostgreSQL for managing users, chats, messages, and model
+            configurations.</li>
+          <li><strong>Ollama Service (Ollama + Helm chart)</strong>: Deployed as a Helm chart on Kubernetes, Ollama
+            serves as the inference engine for multiple open-weight LLM models. Models are pre-loaded and managed
+            through environment variables and persistent volumes.</li>
+          <li><strong>Authentication Stack (Keycloak + OAuth2-proxy + Istio)</strong>: Keycloak provides identity and
+            access management, with OAuth2-proxy handling session validation at the Istio gateway level.</li>
+          <li><strong>Service Mesh (<a href="https://istio.io" target="_blank">Istio</a> + External-DNS + <a
+                href="https://cert-manager.io" target="_blank">Cert-Manager</a>)</strong>: Istio manages ingress, mTLS,
+            and
             traffic policies, integrating with OAuth2-proxy for authentication at the edge, External-DNS for DNS
             management, and Cert-Manager for TLS certificates.</li>
-          <li><strong>GitOps Automation (FluxCD)</strong>: FluxCD continuously reconciles the desired state from Git,
-            automatically deploying updates to the Kubernetes cluster.</li>
+          <li><strong>GitOps Automation (FluxCD + Helm + <a href="https://kustomize.io"
+                target="_blank">Kustomize</a>)</strong>: FluxCD continuously reconciles the desired
+            state from Git, automatically deploying updates to the Kubernetes cluster.</li>
         </ul>
 
         <figure class="text-center">
           <img src="./006-chatbot-architecture.jpg" alt="Chatbot Architecture" class="img-fluid"
             style="width: 60%; height: auto;">
-          <figcaption>High-level architecture of the Bouc.io chatbot platform — everything runs inside a single
-            Kubernetes cluster
-            with Istio-managed ingress, Keycloak-based authentication, and FluxCD-driven GitOps automation.</figcaption>
+          <figcaption>High-level architecture of the chatbot platform — everything runs inside a single
+            Kubernetes cluster with Istio-managed ingress, Keycloak-based authentication, and FluxCD-driven GitOps
+            automation.</figcaption>
         </figure>
 
         <h3>Deployment Architecture</h3>
-        <p>The entire solution is deployed on Docker-Desktop locally or on GKE using a GitOps approach. The FluxCD Git
-          repository contains Helm releases, Helm repositories, Image Policies & Image Automation (where necessary) and
-          Kustomize configurations for each component, with environment-specific overlays for local development and
-          sandbox environments. Key components include:</p>
+        <p>The entire solution is deployed on Docker-Desktop locally or on GKE using Terraform anda GitOps approach. The
+          FluxCD Git repository contains Helm releases, Helm repositories, Image Policies & Image Automation (where
+          necessary) and Kustomize configurations for each component, with environment-specific overlays for local
+          development and sandbox environments. Key components include:</p>
 
         <pre><code>clusters/
 ├── base/           # Base configurations for both applications and infrastructure
@@ -98,11 +104,11 @@
 components/
 ├── chatbot-ui/     # React frontend Helm chart
 ├── chatbot-api/    # Node.js backend API Helm chart
-├── ollama/         # Ollama LLM inference service
-├── keycloak/       # Identity provider
-├── oauth2-proxy/   # Authentication proxy
+├── ollama/         # Ollama LLM inference service Helm chart
+├── keycloak/       # Identity provider Helm chart
+├── oauth2-proxy/   # Authentication proxy Helm chart
 ├── istio/          # Service mesh configuration
-└── cert-manager/   # TLS certificate management</code></pre>
+└── cert-manager/   # TLS certificate management Helm chart</code></pre>
 
         <p>Each component is versioned, containerized, and deployed through Helm charts stored in GitLab's container
           registry. FluxCD's image automation controller watches for new image tags and automatically updates Helm
@@ -135,8 +141,8 @@ components/
           about.</p>
 
         <h4>The Challenge: Token Refresh and PKCE</h4>
-        <p>Implementing automatic token refresh was particularly tricky. The Keycloak JavaScript adapter provides token
-          refresh capabilities, but coordinating this across React components, axios interceptors, and the
+        <p>Implementing automatic token refresh was particularly tricky for me. The Keycloak JavaScript adapter provides
+          token refresh capabilities, but coordinating this across React components, axios interceptors, and the
           authentication store required careful state management. I implemented a centralized auth store that manages
           token refresh logic:</p>
 
@@ -166,15 +172,18 @@ axiosInstance.interceptors.response.use(
           PKCE issues required extensive logging and understanding of the OAuth2 flow.</p>
 
         <h4>The Challenge: CORS and Cross-Origin Token Propagation</h4>
-        <p>Because the frontend (app.bouc.io) and backend (api.bouc.io) run on separate hosts, I had to explicitly
+        <p>Because the frontend (app.domain.com) and backend (api.domain.com) run on separate hosts, I had to explicitly
           manage every aspect of cross-origin access. The browser's CORS enforcement meant that the API had to expose
-          precise headers — in my case Access-Control-Allow-Origin: app.bouc.io, Access-Control-Allow-Credentials: true,
+          precise headers — in my case Access-Control-Allow-Origin: app.domain.com, Access-Control-Allow-Credentials:
+          true,
           and allowed HTTP verbs (GET, POST, PUT, PATCH, DELETE, OPTIONS) — to support preflight requests and session
           cookies. Without these, authentication would silently fail before even reaching the backend.</p>
         <p>The harder part was maintaining token continuity across Keycloak, OAuth2-proxy, and Istio. Once a user
-          authenticated, the __bouc_io cookie represented the session, while OAuth2-proxy validated it and injected the
+          authenticated, the __domain_com cookie represented the session, while OAuth2-proxy validated it and injected
+          the
           x-auth-request-access-token header into Istio's ext-authz flow. This ensured that every call from the frontend
-          to api.bouc.io carried a valid JWT without reauthentication. It took time to align the browser's CORS model,
+          to api.domain.com carried a valid JWT without reauthentication. It took time to align the browser's CORS
+          model,
           OAuth2 behavior, and Istio's security policies, but once configured, it provided seamless, end-to-end token
           propagation through the entire mesh.</p>
 
@@ -188,7 +197,8 @@ axiosInstance.interceptors.response.use(
           lifecycle management, and security best practices. The interaction between Keycloak, OAuth2-proxy, and the
           frontend application requires careful coordination of state, callbacks, and error handling. This was
           particularly challenging for me and remains so as I'm definitely not a security expert and had to learn a lot
-          about OAuth2 and security best practices.</p>
+          about OAuth2 and security best practices. Although it's working, I still don't think it is properly
+          implemented following best practices.</p>
         <p>Troubleshooting authentication wasn't just about fixing one configuration—it required understanding how every
           piece in the chain interacted. A login failure could originate from a browser CORS policy, a missing redirect
           URI in Keycloak, an expired session in OAuth2-proxy, or a header not passed correctly through Istio's
@@ -196,16 +206,14 @@ axiosInstance.interceptors.response.use(
           to make the system stable.</p>
         <p>What made this challenging was that most tools work perfectly in isolation but fail subtly when combined.
           Keycloak expected OIDC semantics, Istio enforced mTLS and strict authorization, and the frontend obeyed
-          browser security rules that none of the backend services were aware of. Once I viewed these not as separate
-          problems but as one connected trust flow, I could reason through the behavior logically and make the
-          components cooperate.</p>
+          browser security rules that none of the backend services were aware of.</p>
 
         <h3>2. GitOps and Infrastructure Automation</h3>
         <h4>The Challenge: FluxCD Submodule Recursion</h4>
         <p>FluxCD's bootstrap process removes recursive submodule configuration by default to avoid potential issues.
           However, my setup relies on Git submodules to reference component-specific repositories. I had to manually
           re-add the <code>recurseSubmodules: true</code> configuration after bootstrap, which wasn't immediately
-          obvious from the documentation for me and took me a while to figure out.</p>
+          obvious for me and took me a while to figure out.</p>
 
         <h4>What I Learned</h4>
         <p>Adopting FluxCD for GitOps automation fundamentally changed how I manage deployments. Everything—from Helm
@@ -218,9 +226,9 @@ axiosInstance.interceptors.response.use(
           that enforces configuration consistency by design.</p>
         <p>Having both a local (Docker Desktop) setup and a sandbox environment on GCP proved essential to developing
           with confidence. The local cluster gave me the freedom to iterate quickly, rebuild containers, and experiment
-          with configuration changes without risk. The sandbox mirrored production-grade conditions—FluxCD GitOps
-          automation, Istio routing, Keycloak authentication, and persistent storage—all running in the same topology as
-          the real system.</p>
+          with configuration changes without risk. The sandbox mirrored conditions with FluxCD GitOps
+          automation, Istio routing, Keycloak authentication, and persistent storage, all running in the same topology
+          as a real system.</p>
         <p>This dual-environment workflow made every deployment reproducible. I could validate Helm charts, Flux
           reconciliations, and Istio gateway rules exactly as they would behave in production before merging any change.
           It turned testing from trial-and-error into a disciplined feedback loop that consistently revealed integration
@@ -228,10 +236,11 @@ axiosInstance.interceptors.response.use(
 
         <h3>3. AI Workload Management</h3>
         <h4>The Challenge: Ollama Model Persistence</h4>
-        <p>Ensuring Ollama models persist across pod restarts required careful volume configuration. I had to configure
+        <p>Ensuring Ollama models persist across pod restarts required proper volume configuration. I had to configure
           persistent volume claims (PVCs) with the correct access modes and ensure the Ollama data directory was
-          properly mounted. This was particular challenging on the Google Cloud Platform with GKE. The community Helm
-          chart for Ollama required specific environment variables for model management.</p>
+          properly mounted. Easy enough locally with Docker-Desktop, this was particular challenging on the Google Cloud
+          Platform with GKE. The community Helm chart for Ollama required specific environment variables for model
+          management.</p>
 
         <h4>What I Learned</h4>
         <p>Open-weight models like Llama 3.2 and Qwen3 provide excellent performance for my chatbot use cases. Ollama
