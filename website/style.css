@@ -207,10 +207,56 @@ a:focus-visible {
 .blog-content img {
     cursor: pointer;
     transition: opacity 0.3s ease;
+    position: relative;
 }
 
 .blog-content img:hover {
     opacity: 0.9;
+}
+
+/* Expand icon overlay - background box */
+.blog-content img::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Expand icon overlay - arrows */
+.blog-content img::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 11;
+    /* Top-left arrow (pointing up-left) - creates a corner arrow */
+    border-top: 5px solid rgba(100, 100, 100, 0.9);
+    border-left: 5px solid rgba(100, 100, 100, 0.9);
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    transform: translate(-10px, -10px);
+    /* Bottom-right arrow (pointing down-right) using box-shadow */
+    box-shadow:
+        20px 20px 0 -5px rgba(100, 100, 100, 0.9),
+        20px 20px 0 0 transparent;
+}
+
+.blog-content img:hover::before,
+.blog-content img:hover::after {
+    opacity: 1;
 }
 
 @keyframes fadeIn {
