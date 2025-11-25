@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Post-Platform Engineering Era - Martin Cote</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+    <script src="../analytics.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">December 29, 2025</div>
+                <h1 class="blog-title">The Post-Platform Engineering Era</h1>
+                <div class="tags">
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">GitOps</span>
+                    <span class="tag">AI</span>
+                    <span class="tag">DevOps</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+                <p>
+                    Over the past decade, Platform Engineering has matured into a stable practice: paved roads, curated
+                    toolchains, Kubernetes clusters, GitOps workflows, observability platforms, and automated deployment
+                    pipelines. Even most observability platforms can now accept code as configuration, rather than point
+                    and click configuration! Yet the operational surface area of modern systems keeps expanding. For
+                    example, Docker containers are nice, but it now means that you have one more OS to manage, i.e. to
+                    patch, to secure, to monitor, to audit. Even well-designed platforms still depend on humans to
+                    interpret the various signals, investigate anomalies, and transform raw data into meaningful
+                    actions. And the workload itself is becoming more complex, with more dependencies, more
+                    configurations, more data to process, more alerts to triage, more patches to apply, more
+                    vulnerabilities to fix, more security issues to address, more compliance requirements to meet, etc.
+                    In short, the workload is dramatically increasing!
+                </p>
+                <p>
+                    I do believe however we are now entering a new phase — one where AI agents, connected to the entire
+                    DevOps feedback loop, begin transforming our systems from automated to autonomous. Instead of teams
+                    manually triaging security findings, updating Dockerfiles, or validating patches, we are approaching
+                    an era where infrastructure can interpret, reason, and act on its own. Almost! And we can already
+                    build early versions of this with the tooling available today.
+                </p>
+                <p>It might be stating the obvious at this point but my interest is how to make it happen now, today!
+                    Because let's be honest, I want the toil to be reduced now, not in a few years' empty promise!</p>
+
+                <h2>The Shift Toward Autonomous Infrastructure</h2>
+                <p>
+                    The core idea is simple: when every stage of the DevOps cycle is observable, structured, and
+                    reachable by an AI model, the entire loop can be connected. Observability systems produce signals.
+                    CI/CD pipelines expose metadata. GitOps controllers apply declarative changes. In this connected
+                    environment, AI agents can become the coordination layer—interpreting events, generating work items,
+                    proposing fixes, and even preparing pull requests.
+                </p>
+                <p>
+                    This transforms DevOps from a human-driven process leveraging automation into a semi-autonomous
+                    ecosystem where agents proactively fetch or receive the signals, perform investigations and
+                    remediations on top of the automation built-in while humans supervise, approve, and provide policy
+                    boundaries.
+                </p>
+
+                <h2>From Signal to Action: The Autonomous DevOps Loop</h2>
+                <p>
+                    The introduction of modern AI coding tools changes the loop in a more fundamental way than simply
+                    automating responses to alerts. Instead of waiting passively for a signal, these tools can actively
+                    explore the codebase, dependency graph, changelogs, configuration files, and operational history to
+                    identify looming risks before they surface as incidents. They shift the loop from reactive to
+                    preventive.
+                </p>
+
+                <p>A quick reference for the DevOps loop from <a href="https://www.bytebytego.com/"
+                        target="_blank">ByteByteGo</a> (I highly recommend that blog and YouTube channel!)</p>
+                <figure class="text-center">
+                    <img src="./999-devops-loop-bytebytego.jpeg" alt="DevOps Loop" class="img-fluid"
+                        style="width: 60%; height: auto;">
+                    <figcaption>DevOps Loop - <a href="https://www.bytebytego.com/" target="_blank">ByteByteGo</a>
+                        illustration - Plan, Code, Build, Test, Release, Deploy, Operator, Monitor...</a></figcaption>
+                </figure>
+
+                <h3>1. Plan - Signal</h3>
+                <p>
+                    Traditional signals still matter—DAST scans, runtime anomalies, dependency vulnerabilities. But
+                    proactive signals emerge as well: outdated base images, deprecated APIs, libraries nearing end of
+                    support, or patterns in recent merges that correlate with instability. AI tools can surface these
+                    early by continuously reviewing the repository rather than waiting for scanners. AI can continuously
+                    reviews changelogs, dependency evolution, and operational data to propose roadmap items or
+                    preventive improvements.
+                </p>
+                <h3>2. Plan - Interpretation</h3>
+                <p>
+                    Once those inputs are been identified and items are created within our overall backlog, the
+                    interpretation shifts from observing a single alert to understanding the broader development
+                    context: recent refactors, version drift, dependency clusters, or modules that frequently introduce
+                    issues. Instead of reacting to one CVE, the system can map out the entire impact surface across
+                    services and forecast related risks.
+                </p>
+                <h3>3. Plan - Decomposition</h3>
+                <p>
+                    Instead of generating a task per signal, whatever the signal is, the AI agent can review the entire
+                    context of the application and codebase and group related items into cohesive tasks or workstreams:
+                    a set of outdated libraries, an entire chain of Docker images that require upgrades, or multiple
+                    services dependent on the same vulnerable module. This creates fewer, clearer work items with better
+                    context and broader corrective impact.
+                </p>
+                <h3>4. Code - Autonomous Investigation</h3>
+                <p>
+                    Investigation becomes more holistic. Rather than only patching the discovered issue or completing
+                    the item identified as improvement, the AI agent can:
+                </p>
+                <ul>
+                    <li>review the full dependency tree to identify upstream or downstream risks,</li>
+                    <li>suggest consolidating versions across services to reduce divergence,</li>
+                    <li>examine the changelog of libraries to detect breaking changes before upgrading,</li>
+                    <li>propose structural improvements such as replacing deprecated APIs or cleaning unused modules.
+                    </li>
+                </ul>
+                <p>
+                    The value here is not the patch — it is the opportunity to eliminate entire classes of future
+                    alerts.
+                </p>
+                <h3>5. Build, Test, Release & Deploy - Execution Through GitOps</h3>
+                <p>
+                    During the <strong>Build</strong> phase, agents introduce proactive checks that catch structural
+                    issues before compilation. They analyze dependency graphs, detect incompatible versions, and
+                    recommend consolidations that reduce drift across services.
+                </p>
+                <p>
+                    In the <strong>Test</strong> phase, they generate or modify tests automatically — expanding coverage
+                    where risk is predicted, adapting cases when libraries evolve, and surfacing the scenarios most
+                    likely to fail.
+                </p>
+                <p>
+                    This flows naturally into <strong>Release</strong>, where AI identifies opportunities to align
+                    versions, remove deprecated components, and coordinate updates across the ecosystem. Instead of
+                    reactive hotfixes triggered by a single alert, releases become structured improvements that reduce
+                    future noise.
+                </p>
+                <p>
+                    Finally, during <strong>Deploy</strong>, GitOps controllers apply a unified set of changes proposed
+                    by the agents. Instead of one-off patches, the system delivers coordinated merge requests:
+                    dependency upgrades, image improvements, configuration cleanups, and version realignments.
+                    Deployment remains declarative and auditable, but the changes being deployed are now systemic rather
+                    than tactical.
+                </p>
+                <p>
+                    This cohesive workflow ensures that fixes address root causes, not just symptoms — strengthening the
+                    entire platform as changes propagate through the GitOps pipeline.
+                </p>
+                <h3>6. Operate & Monitor - Verification</h3>
+                <p>
+                    In the autonomous model, Operate and Monitor merge into a unified verification phase where the
+                    system evaluates not just whether things are functioning now, but how they are likely to behave in
+                    the near future. Instead of focusing on isolated alerts, AI agents analyze runtime behavior
+                    holistically—looking for systemic patterns, drifts, and correlations across services. This allows
+                    them to detect early signs of instability long before they would trigger traditional monitoring
+                    thresholds.
+                </p>
+                <p>
+                    Verification expands from a narrow question—“Did the alert disappear?”—into a broad, forward-looking
+                    assessment. Agents test new versions against known regression signatures, validate compatibility
+                    with dependent services, and simulate workloads to uncover subtle breakpoints. They correlate logs,
+                    traces, and performance metrics across environments to understand how changes propagate through the
+                    platform. When discrepancies appear, the system can propose corrective actions or additional patches
+                    before issues mature into user-visible incidents.
+                </p>
+                <p>
+                    In this model, Operate and Monitor become continuous, anticipatory disciplines. The platform
+                    verifies not only that the current state is healthy but that future states will remain stable,
+                    reducing surprises and reinforcing reliability across the entire ecosystem.
+                </p>
+
+                <h2>How to Build a Basic Version Today</h2>
+                <p>
+                    A first-generation autonomous DevOps loop can be assembled today using existing AI features embedded
+                    in monitoring, planning, and CI/CD platforms. You don't need custom agents—just the right
+                    connections between tools already in the ecosystem.
+                </p>
+                <p>
+                    Modern monitoring platforms like Datadog can automatically open Jira issues from alerts or
+                    anomalies, while GitLab Secure, Snyk, or Trivy provide structured findings for vulnerabilities and
+                    misconfigurations. From there, AI-powered interpretation layers such as Jira Rovo AI, GitLab Duo,
+                    and repo-aware command-line tools like Claude Code, OpenAI Codex, or the Gemini CLI can read the
+                    code, explore dependencies, and attach meaningful summaries or suggested actions.
+                </p>
+                <p>
+                    Once an issue is created, the decomposition and investigation steps can be handled by these same
+                    tools. They can analyze dependency graphs, identify version drift, spot breaking changes, and even
+                    generate patch diffs. This turns raw signals into clear work items or ready-to-review merge
+                    requests. Execution remains governed by GitOps. GitLab CI runs the usual pipelines while FluxCD
+                    applies the changes automatically once approved. Verification is supported by AI-driven analysis
+                    tools like Datadog Bits AI, which review logs and metrics after deployment to confirm the fix or
+                    highlight follow-up actions.
+                </p>
+                <p>
+                    In practice, this creates an early autonomous loop using only off-the-shelf integrations:
+                </p>
+                <ul>
+                    <li>Signal & Issue Creation: Datadog → Jira</li>
+                    <li>Interpretation & Context: Jira Rovo, GitLab Duo</li>
+                    <li>Investigation & Patches: GitLab Duo, Claude Code, Codex, Gemini CLI</li>
+                    <li>Execution: GitLab CI + FluxCD</li>
+                    <li>Verification: Datadog Bits AI</li>
+                </ul>
+                <p>
+                    A lightweight but functional autonomous workflow—built entirely from widely available tools.
+                </p>
+
+                <h2>Conclusion</h2>
+                <p>
+                    The shift toward autonomous infrastructure isn't a distant vision—it's already happening with the
+                    tools we use today. Monitoring platforms create issues automatically, AI systems interpret code and
+                    dependencies with remarkable accuracy, security scanners provide structured intelligence, and GitOps
+                    engines apply changes safely across environments. When combined, these capabilities form the
+                    foundation of systems that can reason about their own health, anticipate risks, and act before
+                    problems turn into incidents.
+                </p>
+                <p>
+                    This evolution changes the role of Platform Engineering from building automation pipelines to
+                    supervising an adaptive ecosystem. Kubernetes becomes the execution substrate, GitOps provides the
+                    control plane, and AI supplies the judgment and coordination required to keep everything aligned.
+                </p>
+                <p>
+                    What emerges is not full autonomy, but something far more practical: platforms that reduce noise,
+                    avoid repeated failures, and continuously harden themselves with minimal human intervention. This is
+                    the post-platform engineering era—an era that's not theoretical or promised, but already underway
+                    for teams willing to connect the tools sitting right in front of them.
+                </p>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Image Modal Overlay -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close">&times;</span>
+        <img class="image-modal-content" id="modalImage" alt="Expanded image">
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script>
+        // Dynamically load the social links block
+        fetch('social-links.html')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('social-links').innerHTML = data;
+            });
+
+        // Image modal functionality
+        (function () {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.image-modal-close');
+            const blogImages = document.querySelectorAll('.blog-content img');
+
+            // Open modal when clicking on an image
+            blogImages.forEach(function (img) {
+                img.addEventListener('click', function () {
+                    modal.classList.add('active');
+                    modalImg.src = this.src;
+                    modalImg.alt = this.alt || 'Expanded image';
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                });
+            });
+
+            // Close modal when clicking the close button
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    closeModal();
+                });
+            }
+
+            // Close modal when clicking outside the image
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        })();
+    </script>
+</body>
+
+</html>
