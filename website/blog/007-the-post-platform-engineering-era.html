@@ -57,7 +57,7 @@
                     we can already build early versions of this today with the tools we already use.
                 </p>
                 <p>And frankly, at the rate I'm seeing the space evolves, by 2027, companies without autonomous DevOps
-                    will face 3x higher operational costs!</p>
+                    will face 2-3x higher operational costs compared to those leveraging it!</p>
 
                 <h2>Most Companies Won't Reach Autonomous DevOps Because Their Foundations Are Broken</h2>
                 <p>Here's the uncomfortable truth: although autonomous DevOps is possible, most companies won't get
@@ -109,7 +109,8 @@
                 </ul>
                 <p>And as autonomy increases, manual roles like release coordinators, operational triage teams, and
                     pipeline babysitters naturally diminish.</p>
-                <p>This isn't about replacing people; it's about transforming the nature of the work.</p>
+                <p>This isn't about replacing people; it's about transforming the nature of the work, figuring out
+                    accountability, skill gaps and security concerns of an semi-autonomous DevOps loop.</p>
 
                 <h2>From Signal to Action: The Autonomous DevOps Loop</h2>
                 <p>
@@ -122,7 +123,7 @@
                 <p>A quick reference for the DevOps loop from <a href="https://www.bytebytego.com/"
                         target="_blank">ByteByteGo</a> (I highly recommend that blog and YouTube channel!)</p>
                 <figure class="text-center">
-                    <img src="./999-devops-loop-bytebytego.jpeg" alt="DevOps Loop" class="img-fluid"
+                    <img src="./007-devops-loop-bytebytego.jpeg" alt="DevOps Loop" class="img-fluid"
                         style="width: 60%; height: auto;">
                     <figcaption>DevOps Loop - <a href="https://www.bytebytego.com/" target="_blank">ByteByteGo</a>
                         illustration - Plan, Code, Build, Test, Release, Deploy, Operator, Monitor...</a></figcaption>
@@ -134,7 +135,7 @@
                     proactive signals emerge as well: outdated base images, deprecated APIs, libraries nearing end of
                     support, or patterns in recent merges that correlate with instability. AI tools can surface these
                     early by continuously reviewing the repository rather than waiting for scanners. AI can continuously
-                    reviews changelogs, dependency evolution, and operational data to propose roadmap items or
+                    review changelogs, dependency evolution, and operational data to propose roadmap items or
                     preventive improvements.
                 </p>
                 <h3>2. Plan - Interpretation</h3>
@@ -252,33 +253,34 @@
                     <li>Execution: GitLab CI + FluxCD</li>
                     <li>Verification: Datadog Bits AI</li>
                 </ul>
-                <p>
-                    A lightweight but functional autonomous workflow—built entirely from widely available tools.
+                <p>A lightweight but functional autonomous workflow—built entirely from widely available tools.
+                </p>
+                <p>The ROI isn't necessarily reducing straight up FTEs, but reducing the time spent on repetitive,
+                    low-value tasks or increasing our bandwidth to do those repetitive, low-value tasks necessary in for
+                    a solid platform.
                 </p>
 
                 <h2>Conclusion</h2>
-                <p>
-                    The move toward autonomous infrastructure is not a hype cycle—it's already materializing inside the
+                <p>The move toward autonomous infrastructure is not a hype cycle—it's already materializing inside the
                     platforms we use every day. Monitoring tools now raise issues on their own, AI systems interpret
                     code and dependencies with precision, security scanners generate structured insights, and GitOps
                     engines apply changes safely across environments. Together, they form the early scaffolding of
                     systems that understand their own health, anticipate risks, and act before problems emerge.
                 </p>
-                <p>
-                    But autonomy won't simply “arrive”. It requires strong foundations, disciplined
+                <p>But autonomy won't simply “arrive”. It requires strong foundations, disciplined
                     engineering cultures, and organizations willing to rethink their structures. The companies that
                     succeed will be the ones that treat their platforms as ecosystems, not just pipelines; and their
                     engineers as designers of systems, not executors of tickets.
                 </p>
-                <p>
-                    What emerges is not full autonomy—but a far more practical evolution: platforms that reduce noise,
+                <p>What emerges is not full autonomy—but a far more practical evolution: platforms that reduce noise,
                     avoid repeated failures, and continuously harden themselves with minimal human intervention. This is
-                    the post-platform engineering era—an era already underway for teams prepared to pay their "technical
-                    debt", to connect the tools sitting in front of them and evolve the roles around them and for
-                    organizations willing to challenge every long-standing assumption, especially in the security
-                    industry, where paperwork is still mistaken for protection and unnecessary complexity is too often
-                    equated with safety. Autonomous systems will push all of us to prioritize
-                    engineering rigor over ritual, and measurable outcomes over checkbox exercises.
+                    the post-platform engineering era—an era already underway for the prepared few, teams prepared to
+                    pay down their technical debt, connect the tools sitting right in front of them, and evolve the
+                    roles around them. And it will only succeed in organizations willing to challenge every
+                    long-standing assumption, especially in the security industry, where paperwork is still mistaken for
+                    protection and unnecessary complexity is too often equated with safety. Autonomous systems will
+                    force all of us to prioritize engineering rigor over ritual, and measurable outcomes over checkbox
+                    exercises.
                 </p>
             </div>
         </article>
