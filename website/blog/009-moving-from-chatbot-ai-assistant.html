@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Blog Post Title</title>
+    <title>Moving from Chatbot to AI Assistant</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../style.css">
@@ -20,34 +20,55 @@
 
         <article>
             <header class="blog-header">
-                <div class="blog-date">March 15, 2024</div>
-                <h1 class="blog-title">Blog Post Title</h1>
+                <div class="blog-date">February 17, 2026</div>
+                <h1 class="blog-title">Moving from Chatbot to AI Assistant</h1>
                 <div class="tags">
                     <span class="tag">Kubernetes</span>
-                    <span class="tag">GCP</span>
-                    <span class="tag">Cloud Native</span>
+                    <span class="tag">AI Assistant</span>
+                    <span class="tag">Memory</span>
+                    <span class="tag">Agent</span>
+                    <span class="tag">LLM</span>
                 </div>
             </header>
 
             <div class="blog-content">
-                <p>This is the introduction paragraph of your blog post. It should provide a brief overview of what the
-                    reader can expect to learn from this article.</p>
+                <p>Since building my <a
+                        href="./006-building-my-own-chatbot-with-open-weight-llms-and-ollama-on-kubernetes.html">chatbot
+                        solution</a>, I've been working on evolving it into a more capable AI assistant. The chatbot was
+                    great for conversations, but I wanted to add capabilities that would make it more useful for complex
+                    tasks and better at remembering context over time.</p>
 
-                <h2>First Section</h2>
-                <p>Your content goes here. This is where you'll write the main body of your blog post. You can include
-                    multiple paragraphs, code examples, and other content.</p>
+                <h2>Adding Memory: Complete</h2>
+                <p>The first major addition was a memory system that allows the assistant to remember important
+                    information across conversations. This isn't just chat history—it's a structured memory system that
+                    can store facts, preferences, and context that the assistant can recall and use in future
+                    interactions.</p>
+                <p>
+                    <img src="./009-memory-ui.jpg" alt="Memory UI - The memory management interface" class="img-fluid"
+                        style="width: 100%; height: auto;">
+                </p>
+                <p>The memory system is fully implemented and working. Users can view, search, and manage their stored
+                    memories through a dedicated interface. The assistant can now remember things like user preferences,
+                    important facts, and context from previous conversations, making interactions feel more personalized
+                    and coherent over time.</p>
 
-                <h3>Subsection</h3>
-                <p>You can organize your content with subsections as needed. This helps readers navigate through longer
-                    articles.</p>
+                <h2>Adding Agent Capabilities: In Progress</h2>
+                <p>The next step is adding agent capabilities—the ability for the assistant to break down complex tasks,
+                    use tools, and execute multi-step workflows. This is still a work in progress, but I've started
+                    building the foundation for it.</p>
+                <p>
+                    <img src="./009-agent-ui.jpg"
+                        alt="Agent UI - The agent interface showing task planning and execution" class="img-fluid"
+                        style="width: 100%; height: auto;">
+                </p>
+                <p>The agent system will allow the assistant to plan and execute more complex tasks, potentially using
+                    external tools and APIs. Right now, the UI and basic structure are in place, but there's still work
+                    to be done on the execution engine and tool integration.</p>
 
-                <pre><code>// Example code block
-const example = "This is how you can include code snippets";
-console.log(example);</code></pre>
-
-                <h2>Conclusion</h2>
-                <p>Wrap up your blog post with a conclusion that summarizes the key points and provides any final
-                    thoughts or next steps for the reader.</p>
+                <h2>What's Next</h2>
+                <p>I'm continuing to work on the agent capabilities, focusing on making it reliable and useful for
+                    real-world tasks. The goal is to have an assistant that can not just chat, but actually help
+                    accomplish complex workflows by breaking them down into steps and executing them systematically.</p>
 
                 <section class="ai-disclosure mt-4 mb-4" style="font-size: 0.85rem; color: #adb5bd;">
                     <h2 class="h6 mb-2" style="font-size: 0.9rem;">AI Usage Disclosure</h2>
@@ -56,7 +77,6 @@ console.log(example);</code></pre>
                         nature of AI usage, please contact the author.
                     </p>
                 </section>
-
             </div>
         </article>
 
