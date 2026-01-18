@@ -36,13 +36,14 @@
                         href="./006-building-my-own-chatbot-with-open-weight-llms-and-ollama-on-kubernetes.html">chatbot
                         solution</a>, I've been working on evolving it into a more capable AI assistant. The chatbot was
                     great for conversations, but I wanted to add capabilities that would make it more useful for complex
-                    tasks and better at remembering context over time.</p>
+                    tasks and better at remembering context over time, trying to learn what those frontier labs are
+                    doing and how they are doing it.</p>
 
-                <h2>Adding Memory: Complete</h2>
+                <h2>Adding Memory: Mostly Complete</h2>
                 <p>The first major addition was a memory system that allows the assistant to remember important
-                    information across conversations. This isn't just chat history—it's a structured memory system that
-                    can store facts, preferences, and context that the assistant can recall and use in future
-                    interactions.</p>
+                    information within conversations as well as across conversations (or assignments). This isn't just
+                    chat history—it's a structured memory system that can store facts, preferences, and context that the
+                    assistant can recall and use in future interactions.</p>
                 <p>
                     <img src="./009-memory-ui.jpg" alt="Memory UI - The memory management interface" class="img-fluid"
                         style="width: 100%; height: auto;">
@@ -50,7 +51,24 @@
                 <p>The memory system is fully implemented and working. Users can view, search, and manage their stored
                     memories through a dedicated interface. The assistant can now remember things like user preferences,
                     important facts, and context from previous conversations, making interactions feel more personalized
-                    and coherent over time.</p>
+                    and coherent over time. It can also technically retrieve via a vector search memories relevant to
+                    the current conversation or assignment. It is however rudimentary, especially when I use one of the
+                    small LLMs (e.g. Qwen3 3B) to determine the relevant memories.</p>
+                <p>My first surprise was how this is all implemented! After doing some research and a LOT of use of
+                    ChatGPT, Claude and Gemini, I basically learned that the overall process is simply to take the
+                    entire chat or assignment and send it over to the LLM while giving it directive to extract and
+                    segment, evaluate candidates and score those. The ones deemed relevant are then stored in the memory
+                    system.
+                </p>
+                <p>This was so simple, I'm still unsure if that's really the way the frontier labs are doing it!! I was
+                    directed to this research and will have to read it:
+                <ul>
+                    <li><a href="https://arxiv.org/abs/2310.08560" target="_blank">MemGPT: Towards LLMs as Operating
+                            Systems</a></li>
+                    <li><a href="https://arxiv.org/abs/2511.05495" target="_blank">IMDMR: An Intelligent
+                            Multi-Dimensional Memory Retrieval System for Enhanced Conversational AI</a></li>
+                </ul>
+                </p>
 
                 <h2>Adding Agent Capabilities: In Progress</h2>
                 <p>The next step is adding agent capabilities—the ability for the assistant to break down complex tasks,
@@ -64,6 +82,15 @@
                 <p>The agent system will allow the assistant to plan and execute more complex tasks, potentially using
                     external tools and APIs. Right now, the UI and basic structure are in place, but there's still work
                     to be done on the execution engine and tool integration.</p>
+                <p>Again, I was directed to this research and will have to read it:
+                <ul>
+                    <li><a href="https://arxiv.org/abs/2210.03629" target="_blank">ReAct: Synergizing Reasoning and
+                            Acting
+                            in Language Models</a></li>
+                    <li><a href="https://arxiv.org/abs/2302.04761" target="_blank">Toolformer: Language Models Can Teach
+                            Themselves to Use Tools</a></li>
+                </ul>
+                </p>
 
                 <h2>What's Next</h2>
                 <p>I'm continuing to work on the agent capabilities, focusing on making it reliable and useful for
