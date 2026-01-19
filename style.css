@@ -32,6 +32,11 @@ a:focus-visible {
     font-size: 2em;
 }
 
+/* Slightly larger blog icon on home page */
+.social-icon--blog {
+    font-size: 3.2em;
+}
+
 .social-link {
     margin: 0 20px;
     /* This adds 20px spacing on both left and right */
