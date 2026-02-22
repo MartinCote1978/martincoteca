@@ -20,10 +20,10 @@
 
         <article>
             <header class="blog-header">
-                <div class="blog-date">February 17, 2026</div>
+                <div class="blog-date">March 4, 2026</div>
                 <h1 class="blog-title">Moving from Chatbot to AI Assistant</h1>
                 <div class="tags">
-                    <span class="tag">Kubernetes</span>
+                    <span class="tag">AI research</span>
                     <span class="tag">AI Assistant</span>
                     <span class="tag">Memory</span>
                     <span class="tag">Agent</span>
@@ -35,53 +35,63 @@
                 <p>Since building my <a
                         href="./006-building-my-own-chatbot-with-open-weight-llms-and-ollama-on-kubernetes.html">chatbot
                         solution</a>, I've been working on evolving it into a more capable AI assistant. The chatbot was
-                    great for conversations, but I wanted to add capabilities that would make it more useful for complex
-                    tasks and better at remembering context over time, trying to learn what those frontier labs are
-                    doing and how they are doing it.</p>
+                    great for conversations, but I wanted to go further — adding memory that persists across sessions
+                    and the ability to handle complex, multi-step tasks. Along the way, I set myself a secondary goal:
+                    understand how the frontier labs actually build these things.</p>
 
                 <h2>Adding Memory: Mostly Complete</h2>
                 <p>The first major addition was a memory system that allows the assistant to remember important
-                    information within conversations as well as across conversations (or assignments). This isn't just
-                    chat history—it's a structured memory system that can store facts, preferences, and context that the
-                    assistant can recall and use in future interactions.</p>
+                    information within conversations as well as across conversations (or assignments). It's a structured
+                    memory system that can store facts, preferences, and context that the assistant can recall and use
+                    in future interactions.</p>
                 <p>
                     <img src="./009-memory-ui.jpg" alt="Memory UI - The memory management interface" class="img-fluid"
                         style="width: 100%; height: auto;">
                 </p>
-                <p>The memory system is fully implemented and working. Users can view, search, and manage their stored
-                    memories through a dedicated interface. The assistant can now remember things like user preferences,
-                    important facts, and context from previous conversations, making interactions feel more personalized
-                    and coherent over time. It can also technically retrieve via a vector search memories relevant to
-                    the current conversation or assignment. It is however rudimentary, especially when I use one of the
-                    small LLMs (e.g. Qwen3 3B) to determine the relevant memories.</p>
+                <p>The memory system is implemented and working at this point, although in a rudimentary way. Users can
+                    view, search, and manage their stored memories through a dedicated interface. The assistant can now
+                    remember things like user preferences, important facts, and context from previous conversations,
+                    making interactions feel more personalized and coherent over time. It can also retrieve via
+                    semantic vector search the memories most relevant to the current conversation or assignment.</p>
                 <p>My first surprise was how this is all implemented! After doing some research and a LOT of use of
-                    ChatGPT, Claude and Gemini, I basically learned that the overall process is simply to take the
-                    entire chat or assignment and send it over to the LLM while giving it directive to extract and
-                    segment, evaluate candidates and score those. The ones deemed relevant are then stored in the memory
-                    system.
+                    ChatGPT, Claude and Gemini for help with the design, the overall process is to send the completed
+                    conversation to the LLM, which classifies each candidate memory into categories
+                    (<em>persona</em>, <em>preference</em>, <em>fact</em>, <em>instruction</em>, <em>context</em>) and
+                    assigns an importance level (<em>critical</em>, <em>high</em>, <em>medium</em>, <em>low</em>).
+                    Candidates above a confidence threshold are then stored in PostgreSQL with their vector embeddings
+                    via pgvector.
                 </p>
-                <p>This was so simple, I'm still unsure if that's really the way the frontier labs are doing it!! I was
-                    directed to this research and will have to read it:
+                <p>Retrieval is tiered: <em>critical</em> memories (core persona, standing instructions) are always
+                    injected first; semantic vector search then fills remaining slots by relevance score, down to a
+                    configurable <code>max_memories</code> limit. Quality of extracted memories depends heavily on the
+                    LLM used — small models (sub-1B like Qwen3 0.6B, the one I relied heavily) produce noticeably
+                    noisier extractions.
+                </p>
+                <p>This entire design was so simple in principle however, I'm still questioning if that's really the way
+                    the frontier labs are doing it!! I was directed to this research and will have to read it:
                 <ul>
                     <li><a href="https://arxiv.org/abs/2310.08560" target="_blank">MemGPT: Towards LLMs as Operating
                             Systems</a></li>
                     <li><a href="https://arxiv.org/abs/2511.05495" target="_blank">IMDMR: An Intelligent
                             Multi-Dimensional Memory Retrieval System for Enhanced Conversational AI</a></li>
+                    <li><a href="https://github.com/sameeerjadhav/google-agents-resources/blob/main/White%20Papers/3%20Context%20Engineering_%20Sessions%20%26%20Memory.pdf"
+                            target="_blank">Context Engineering: Sessions, Memory</a></li>
                 </ul>
                 </p>
 
-                <h2>Adding Agent Capabilities: In Progress</h2>
+                <h2>Adding Agent Capabilities: In Progress...</h2>
                 <p>The next step is adding agent capabilities—the ability for the assistant to break down complex tasks,
-                    use tools, and execute multi-step workflows. This is still a work in progress, but I've started
-                    building the foundation for it.</p>
+                    use tools, and execute multi-step workflows. This is still a work in progress (as the error in the
+                    screenshot below shows), but I've started building the foundation for it.</p>
                 <p>
                     <img src="./009-agent-ui.jpg"
                         alt="Agent UI - The agent interface showing task planning and execution" class="img-fluid"
                         style="width: 100%; height: auto;">
                 </p>
                 <p>The agent system will allow the assistant to plan and execute more complex tasks, potentially using
-                    external tools and APIs. Right now, the UI and basic structure are in place, but there's still work
-                    to be done on the execution engine and tool integration.</p>
+                    external tools and APIs. Right now, the UI and basic structure are in place along with a simple loop
+                    to perform a more detailed plan, but there's still work to be done on this execution engine and tool
+                    integration.</p>
                 <p>Again, I was directed to this research and will have to read it:
                 <ul>
                     <li><a href="https://arxiv.org/abs/2210.03629" target="_blank">ReAct: Synergizing Reasoning and
@@ -93,9 +103,13 @@
                 </p>
 
                 <h2>What's Next</h2>
-                <p>I'm continuing to work on the agent capabilities, focusing on making it reliable and useful for
-                    real-world tasks. The goal is to have an assistant that can not just chat, but actually help
-                    accomplish complex workflows by breaking them down into steps and executing them systematically.</p>
+                <p>The immediate focus is on making the agent's tool integrations more robust and useful. I'll be adding
+                    a few tools — a web search, a calculator, and a generic HTTP request caller for hitting external
+                    APIs — and the next step is making the agent reliably choose and use them in multi-step workflows
+                    rather than just single-turn calls (most likely also by adding more capacity with a Nvidia Jetson
+                    Orin nano to my cluster).</p>
+                <p>It won't match what the frontier tools can do, but building it from scratch is a great learning
+                    experience and the fastest way I've found to actually understand how these systems work.</p>
 
                 <section class="ai-disclosure mt-4 mb-4" style="font-size: 0.85rem; color: #adb5bd;">
                     <h2 class="h6 mb-2" style="font-size: 0.9rem;">AI Usage Disclosure</h2>
