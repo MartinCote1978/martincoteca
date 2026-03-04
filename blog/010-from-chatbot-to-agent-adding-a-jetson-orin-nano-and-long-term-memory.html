@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>From Chatbot to Agent: Adding a Jetson Orin Nano and Long-Term Memory</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N5GN1K3DD0"></script>
+    <script src="../analytics.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-to-blogs">
+            <a href="../blogs.html"><i class="fas fa-arrow-left"></i> Back to Blogs</a>
+        </div>
+
+        <article>
+            <header class="blog-header">
+                <div class="blog-date">March 8, 2026</div>
+                <h1 class="blog-title">From Chatbot to Agent: Adding a Jetson Orin Nano and Long-Term Memory</h1>
+                <div class="tags">
+                    <span class="tag">AI Assistant</span>
+                    <span class="tag">AI Agents</span>
+                    <span class="tag">LLM</span>
+                    <span class="tag">Ollama</span>
+                    <span class="tag">Kubernetes</span>
+                    <span class="tag">Nvidia Jetson</span>
+                    <span class="tag">pgvector</span>
+                    <span class="tag">Developer Workflow</span>
+                </div>
+            </header>
+
+            <div class="blog-content">
+                <p>That went fast!! With some vacation and a few focused days, along with Claude Code
+                    and Gemini CLI doing most of the heavy lifting, I went from a simple chatbot app to an agent :
+                    an API server orchestrating runs, a React front-end, and a dedicated API server to persist
+                    long-term memories on PostgreSQL with <code>pgvector</code>.
+                </p>
+
+                <h2>Improvement 1: From Chat to Agent</h2>
+                <p>The first big step was turning “chat” into a planner-executor agent. Instead of sending a user
+                    message directly to the LLM, the API now runs a planning phase first: the model reads the message
+                    and produces a structured JSON plan. An execution loop then works through each step, calling tools
+                    and streaming progress back to the UI over SSE. Here is a real plan from a test run:
+                </p>
+                <pre><code>{
+  “goal”: “Calculate 12 * (3+4) / 2”,
+  “steps”: [
+    {
+      “id”: 1,
+      “description”: “Evaluate the expression using the calculator tool.”,
+      “tool_intent”: “calculator”
+    }
+  ]
+}</code></pre>
+                <p>That single-step plan triggered 4 LLM calls total — planning, tool invocation, result
+                    interpretation, and response synthesis. Under the hood, the Node.js agent API server uses
+                    <code>BullMQ</code> and Redis to queue and process runs asynchronously, while a separate
+                    memory API server backed by PostgreSQL with <code>pgvector</code> handles long-term memory
+                    storage and retrieval.
+                </p>
+
+                <h2>Improvement 2: Nvidia Jetson Orin Nano as a Kubernetes Worker Node</h2>
+                <p>The second step was upgrading the hardware and adding a GPU for more compute. I installed an Nvidia
+                    Jetson Orin Nano Super Developer Kit and joined it as a Kubernetes worker node, then pointed Ollama
+                    workloads at it while keeping the others on the Raspberry Pi 5. That let me move from
+                    <code>Qwen3 0.6B</code> to <code>Qwen3.5:2b</code> as my default local model, with the agent API and
+                    UI barely noticing anything except “more headroom” for better answers.
+                </p>
+                <p>The setup and configuration of the Jetson Orin Nano as a Kubernetes worker node was extremely painful
+                    and time-consuming. I "bricked" the Jetson Orin Nano at least 20 times before I got it working. It
+                    will be worth its own blog post in the future.</p>
+
+                <p>The image below shows the agent assignment and run overview.</p>
+                <p>
+                    <img src="./010-ai-agent-assignment-01.jpg" alt="Agent assignment and run overview"
+                        class="img-fluid" style="width: 100%; height: auto;">
+                </p>
+                <p>The image below shows the agent plan and streaming execution.</p>
+                <p>
+                    <img src="./010-ai-agent-assignment-02.jpg" alt="Agent plan and streaming execution"
+                        class="img-fluid" style="width: 100%; height: auto;">
+                </p>
+
+                <h2>What's Next</h2>
+                <p>Next, I want to improve the agent tools to ensure they are more robust and useful. And maybe connect
+                    to an API of one of the frontier labs APIs (like Google Gemini, OpenAI, Anthropic, etc.) to test my
+                    agent against them. This should allow me to validate my code while removing the constraints of the
+                    local, smaller models.
+                </p>
+                <p>I'm also considering upgrading to two GPU nodes and adding llm-d and vLLM to the mix.</p>
+
+                <section class="ai-disclosure mt-4 mb-4" style="font-size: 0.85rem; color: #adb5bd;">
+                    <h2 class="h6 mb-2" style="font-size: 0.9rem;">AI Usage Disclosure</h2>
+                    <p class="mb-0" style="font-size: 0.85rem;">This document was created with assistance from AI tools.
+                        The content has been reviewed and edited by a human. For more information on the extent and
+                        nature of AI usage, please contact the author.
+                    </p>
+                </section>
+            </div>
+        </article>
+
+        <div class="d-flex justify-content-center vertical-spacing">
+            <a href="https://github.com/MartinCote1978" class="social-link" target="_blank">
+                <i class="fab fa-github social-icon"></i>
+            </a>
+            <a href="https://www.linkedin.com/in/martincote" class="social-link" target="_blank">
+                <i class="fab fa-linkedin-in social-icon"></i>
+            </a>
+            <a href="https://mastodon.online/@MartinCote" class="social-link" target="_blank">
+                <i class="fab fa-mastodon social-icon"></i>
+            </a>
+            <a href="https://gitlab.com/bouc-io" class="social-link" target="_blank">
+                <i class="fab fa-gitlab social-icon"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Image Modal Overlay -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close">&times;</span>
+        <img class="image-modal-content" id="modalImage" alt="Expanded image">
+    </div>
+
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.min.js"></script>
+    <script>
+        // Image modal functionality
+        (function () {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.image-modal-close');
+            const blogImages = document.querySelectorAll('.blog-content img');
+
+            blogImages.forEach(function (img) {
+                img.addEventListener('click', function () {
+                    modal.classList.add('active');
+                    modalImg.src = this.src;
+                    modalImg.alt = this.alt || 'Expanded image';
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    closeModal();
+                });
+            }
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('active')) {
+                    closeModal();
+                }
+            });
+
+            function closeModal() {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        })();
+    </script>
+</body>
+
+</html>
