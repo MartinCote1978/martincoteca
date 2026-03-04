@@ -53,13 +53,13 @@
                     remember things like user preferences, important facts, and context from previous conversations,
                     making interactions feel more personalized and coherent over time. It can also retrieve via
                     semantic vector search the memories most relevant to the current conversation or assignment.</p>
-                <p>My first surprise was how this is all implemented! After doing some research and a LOT of use of
-                    ChatGPT, Claude and Gemini for help with the design, the overall process is to send the completed
-                    conversation to the LLM, which classifies each candidate memory into categories
-                    (<em>persona</em>, <em>preference</em>, <em>fact</em>, <em>instruction</em>, <em>context</em>) and
-                    assigns an importance level (<em>critical</em>, <em>high</em>, <em>medium</em>, <em>low</em>).
-                    Candidates above a confidence threshold are then stored in PostgreSQL with their vector embeddings
-                    via pgvector.
+                <p>My first surprise was how this is all implemented! After some use of AI tools (ChatGPT, Claude and
+                    Gemini) as research accelerators while evaluating competing design approaches, the overall process
+                    is to send the completed conversation to the LLM, which classifies each candidate memory into
+                    categories (<em>persona</em>, <em>preference</em>, <em>fact</em>, <em>instruction</em>,
+                    <em>context</em>) and assigns an importance level (<em>critical</em>, <em>high</em>,
+                    <em>medium</em>, <em>low</em>). Candidates above a confidence threshold are then stored in
+                    PostgreSQL with their vector embeddings via pgvector.
                 </p>
                 <p>Retrieval is tiered: <em>critical</em> memories (core persona, standing instructions) are always
                     injected first; semantic vector search then fills remaining slots by relevance score, down to a
