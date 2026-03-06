@@ -36,9 +36,9 @@
 
             <div class="blog-content">
                 <p>That went fast!! With some vacation and a few focused days, along with Claude Code
-                    and Gemini CLI doing most of the heavy lifting, I went from a simple chatbot app to an agent :
-                    an API server orchestrating runs, a React front-end, and a dedicated API server to persist
-                    long-term memories on PostgreSQL with <code>pgvector</code>.
+                    and Gemini CLI doing most of the heavy lifting from a solid foundation, I went from a simple chatbot
+                    app to a complete agent: an API server orchestrating runs, a React front-end, and a dedicated API
+                    server to persist long-term memories on PostgreSQL with <code>pgvector</code>.
                 </p>
 
                 <h2>Improvement 1: From Chat to Agent</h2>
@@ -57,7 +57,7 @@
     }
   ]
 }</code></pre>
-                <p>That single-step plan triggered 4 LLM calls total — planning, tool invocation, result
+                <p>That single-step plan triggered 4 LLM calls total, including planning, tool invocation, result
                     interpretation, and response synthesis. Under the hood, the Node.js agent API server uses
                     <code>BullMQ</code> and Redis to queue and process runs asynchronously, while a separate
                     memory API server backed by PostgreSQL with <code>pgvector</code> handles long-term memory
@@ -65,11 +65,11 @@
                 </p>
 
                 <h2>Improvement 2: Nvidia Jetson Orin Nano as a Kubernetes Worker Node</h2>
-                <p>The second step was upgrading the hardware and adding a GPU for more compute. I installed an Nvidia
-                    Jetson Orin Nano Super Developer Kit and joined it as a Kubernetes worker node, then pointed Ollama
-                    workloads at it while keeping the others on the Raspberry Pi 5. That let me move from
-                    <code>Qwen3 0.6B</code> to <code>Qwen3.5:2b</code> as my default local model, with the agent API and
-                    UI barely noticing anything except “more headroom” for better answers.
+                <p>The second step was upgrading the hardware of my kubernetes cluster, which was built on Raspberry Pi
+                    5 computers, and adding a GPU for more compute. I installed an Nvidia Jetson Orin Nano Super
+                    Developer Kit and joined it as a Kubernetes worker node, then pointed Ollama workloads at it while
+                    keeping the others on the Raspberry Pi 5. That let me move from <code>Qwen3 0.6B</code> to
+                    <code>Qwen3.5:2b</code> as my default local model.
                 </p>
                 <p>The setup and configuration of the Jetson Orin Nano as a Kubernetes worker node was extremely painful
                     and time-consuming. I "bricked" the Jetson Orin Nano at least 20 times before I got it working. It
@@ -85,6 +85,11 @@
                     <img src="./010-ai-agent-assignment-02.jpg" alt="Agent plan and streaming execution"
                         class="img-fluid" style="width: 100%; height: auto;">
                 </p>
+                <p>Another agent execution with the use of the time/date tool.</p>
+                <p>
+                    <img src="./010-ai-agent-assignment-03.jpg" alt="Agent execution with time/date tool"
+                        class="img-fluid" style="width: 100%; height: auto;">
+                </p>
 
                 <h2>What's Next</h2>
                 <p>Next, I want to improve the agent tools to ensure they are more robust and useful. And maybe connect
@@ -92,7 +97,8 @@
                     agent against them. This should allow me to validate my code while removing the constraints of the
                     local, smaller models.
                 </p>
-                <p>I'm also considering upgrading to two GPU nodes and adding llm-d and vLLM to the mix.</p>
+                <p>I'm also considering upgrading to two GPU nodes and adding llm-d and vLLM to the mix just for fun!
+                    $$$</p>
 
                 <section class="ai-disclosure mt-4 mb-4" style="font-size: 0.85rem; color: #adb5bd;">
                     <h2 class="h6 mb-2" style="font-size: 0.9rem;">AI Usage Disclosure</h2>
