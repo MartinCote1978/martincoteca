@@ -47,6 +47,12 @@ a:focus-visible {
     /* This adds 50px spacing from the top */
 }
 
+.location-text {
+    color: #adb5bd;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
 
 .project-logo {
     width: 75px;
